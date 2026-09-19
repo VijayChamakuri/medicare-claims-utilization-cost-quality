@@ -1,4 +1,4 @@
-.PHONY: setup fixture all download build validate export excel reports tableau dashboard readme check-readme links lint typecheck test clean
+.PHONY: setup fixture fixture-all dbt dbt-models all download build validate export excel reports tableau dashboard readme check-readme links lint typecheck test clean
 
 setup:
 	uv sync --extra dev
@@ -12,6 +12,23 @@ fixture:
 	uv run python -m medicare_claims --profile fixture reports
 	uv run python -m medicare_claims --profile fixture tableau
 	uv run python -m medicare_claims --profile fixture dashboard
+
+# Fixture with a file-backed warehouse, the dbt build and legacy equivalence, Excel, PDF and the Tableau workbook.
+fixture-all:
+	uv run python -m medicare_claims --profile fixture build
+	uv run python -m medicare_claims --profile fixture dbt
+	uv run python -m medicare_claims --profile fixture validate
+	uv run python -m medicare_claims --profile fixture export
+	uv run python -m medicare_claims --profile fixture excel
+	uv run python -m medicare_claims --profile fixture reports
+	uv run python -m medicare_claims --profile fixture tableau
+
+dbt:
+	uv run python -m medicare_claims dbt
+
+# Regenerate the dbt models from sql/ (tests fail if they are stale).
+dbt-models:
+	uv run python scripts/gen_dbt_models.py
 
 # Real CMS sample 1: download and verify, build, validate, export, Excel, reports, Tableau extracts, dashboard.
 all:

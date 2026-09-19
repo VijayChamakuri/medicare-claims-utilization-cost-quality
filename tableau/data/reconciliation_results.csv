@@ -1,0 +1,42 @@
+check_name,category,expected,actual,difference,tolerance,blocking,passed,detail
+analytic_claims_inside_study_window,dates,0.0,0.0,0.0,0.0,True,True,analytic claims outside the window
+stay_length_never_negative,dates,0.0,0.0,0.0,0.0,True,True,stays with discharge before admission
+member_months_never_exceed_12_per_year,eligibility,0.0,0.0,0.0,0.0,True,True,beneficiary-years outside 0..12
+stay_claims_to_inpatient_claims,fact_to_fact,66479.0,66479.0,0.0,0.0,True,True,every analytic inpatient claim is in a stay
+stay_payment_to_inpatient_claims,fact_to_fact,636397180.0,636397180.0,0.0,0.005,True,True,stays carry all inpatient payment
+analytic_claims_to_utilization_mart,fact_to_mart,5587039.0,5587039.0,0.0,0.0,True,True,monthly utilization claim total
+analytic_payment_to_annual_mart,fact_to_mart,1274789230.0,1274789230.0,0.0,0.005,True,True,annual payment mart total
+analytic_payment_to_monthly_mart,fact_to_mart,1274789230.0,1274789230.0,0.0,0.005,True,True,monthly payment mart total
+stays_to_utilization_mart,fact_to_mart,64359.0,64359.0,0.0,0.0,True,True,monthly admissions total
+fk_header_beneficiary_in_dimension,foreign_keys,0.0,0.0,0.0,0.0,False,True,claims whose beneficiary is absent from every beneficiary summary file (informational)
+fk_header_setting_valid,foreign_keys,0.0,0.0,0.0,0.0,True,True,claims with an unknown care setting
+carrier_header_equals_line_payment,header_line,414603690.0,414603690.0,0.0,0.005,True,True,carrier header payment equals the sum of its lines
+summary_medreimb_car_2008,informational,135212180.0,146791920.0,11579740.0,2704243.6,False,False,MEDREIMB_CAR versus carrier claim payment (relative tolerance 2 percent)
+summary_medreimb_car_2009,informational,153232790.0,165209480.0,11976690.0,3064655.8,False,False,MEDREIMB_CAR versus carrier claim payment (relative tolerance 2 percent)
+summary_medreimb_car_2010,informational,95573590.0,102602290.0,7028700.0,1911471.8,False,False,MEDREIMB_CAR versus carrier claim payment (relative tolerance 2 percent)
+summary_medreimb_ip_2008,informational,257624360.0,258061880.0,437520.0,5152487.2,False,True,MEDREIMB_IP versus inpatient claim payment (relative tolerance 2 percent)
+summary_medreimb_ip_2009,informational,250842760.0,245440970.0,5401790.0,5016855.2,False,False,MEDREIMB_IP versus inpatient claim payment (relative tolerance 2 percent)
+summary_medreimb_ip_2010,informational,139989740.0,132894330.0,7095410.0,2799794.8,False,False,MEDREIMB_IP versus inpatient claim payment (relative tolerance 2 percent)
+summary_medreimb_op_2008,informational,72397300.0,78421870.0,6024570.0,1447946.0,False,False,MEDREIMB_OP versus outpatient claim payment (relative tolerance 2 percent)
+summary_medreimb_op_2009,informational,88139830.0,94151050.0,6011220.0,1762796.6,False,False,MEDREIMB_OP versus outpatient claim payment (relative tolerance 2 percent)
+summary_medreimb_op_2010,informational,48755220.0,51215440.0,2460220.0,975104.4,False,False,MEDREIMB_OP versus outpatient claim payment (relative tolerance 2 percent)
+key_unique_beneficiary_year,keys,343644.0,343644.0,0.0,0.0,True,True,beneficiary_id + year
+key_unique_claim_header,keys,5587855.0,5587855.0,0.0,0.0,True,True,claim_key
+key_unique_claim_line,keys,13163019.0,13163019.0,0.0,0.0,True,True,claim_key + line_num
+key_unique_dim_beneficiary,keys,116352.0,116352.0,0.0,0.0,True,True,beneficiary_id
+key_unique_dim_diagnosis,keys,13408.0,13408.0,0.0,0.0,True,True,diagnosis_code
+key_unique_dim_procedure,keys,8991.0,8991.0,0.0,0.0,True,True,procedure_code
+key_unique_dim_provider,keys,642257.0,642257.0,0.0,0.0,True,True,provider_type + provider_id
+key_unique_inpatient_stay,keys,64359.0,64359.0,0.0,0.0,True,True,stay_key
+key_unique_member_month,keys,4123728.0,4123728.0,0.0,0.0,True,True,beneficiary_id + year + month
+key_unique_provider_year,keys,1301909.0,1301909.0,0.0,0.0,True,True,provider_type + provider_id + year
+critical_field_null_claim_id,nulls,0.0,0.0,0.0,0.0,True,True,claims missing an ID
+critical_field_null_payment,nulls,0.0,0.0,0.0,0.0,True,True,claims with no payment value
+rows_raw_to_staging_beneficiary,raw_to_staging,343644.0,343644.0,0.0,0.0,True,True,distinct beneficiary-years equal staged rows
+rows_raw_to_staging_carrier,raw_to_staging,4741335.0,4741335.0,0.0,0.0,True,True,distinct source claims equal staged claims
+rows_raw_to_staging_inpatient,raw_to_staging,66773.0,66773.0,0.0,0.0,True,True,distinct source claim segments equal staged rows
+rows_raw_to_staging_outpatient,raw_to_staging,790790.0,790790.0,0.0,0.0,True,True,distinct source claim segments equal staged rows
+claims_staging_to_header_carrier,staging_to_fact,4741335.0,4741335.0,0.0,0.0,True,True,one header per carrier claim
+claims_staging_to_header_inpatient,staging_to_fact,66705.0,66705.0,0.0,0.0,True,True,segments merge into one claim
+claims_staging_to_header_outpatient,staging_to_fact,779815.0,779815.0,0.0,0.0,True,True,segments merge into one claim
+payment_source_to_header_total,staging_to_fact,1278388580.0,1278388580.0,0.0,0.005,True,True,CLM_PMT_AMT and LINE_NCH_PMT_AMT_n in staging equal header payment_amount

@@ -1,0 +1,31 @@
+year,metric_id,tableau_sheet,expected_value,extract_value,passed
+2008,admissions_per_1000,"KPI Admissions per 1,000 member-years",244.7604424178738,244.7604424178738,True
+2008,beneficiaries,KPI Beneficiaries,116352.0,116352.0,True
+2008,claims,KPI Claims,2025978.0,2025978.0,True
+2008,ed_proxy_per_1000,"KPI ED proxy per 1,000 member-years",209.64288293913842,209.6428829391384,True
+2008,paid_amount,KPI Paid amount,483275670.0,483275670.0,True
+2008,paid_per_admission,KPI Paid per admission,9826.436676566902,9826.436676566902,True
+2008,paid_per_beneficiary,KPI Paid per beneficiary,4153.565645627063,4153.565645627063,True
+2008,paid_per_claim,KPI Paid per claim,238.53944613416334,238.53944613416337,True
+2008,readmission_proxy,KPI Readmission proxy rate,0.15103824291404044,0.1510382429140404,True
+2008,top5_payment_share,KPI Top 5% payment share,0.4846640427812143,0.4846640427812143,True
+2009,admissions_per_1000,"KPI Admissions per 1,000 member-years",232.34129378338946,232.34129378338943,True
+2009,beneficiaries,KPI Beneficiaries,114538.0,114538.0,True
+2009,claims,KPI Claims,2210561.0,2210561.0,True
+2009,ed_proxy_per_1000,"KPI ED proxy per 1,000 member-years",247.61131649096632,247.61131649096632,True
+2009,paid_amount,KPI Paid amount,504801500.0,504801500.0,True
+2009,paid_per_admission,KPI Paid per admission,9932.859975718333,9932.859975718333,True
+2009,paid_per_beneficiary,KPI Paid per beneficiary,4407.284045469626,4407.284045469626,True
+2009,paid_per_claim,KPI Paid per claim,228.35900027187668,228.35900027187668,True
+2009,readmission_proxy,KPI Readmission proxy rate,0.0753543593264144,0.0753543593264144,True
+2009,top5_payment_share,KPI Top 5% payment share,0.3921243696779823,0.3921243696779823,True
+2010,admissions_per_1000,"KPI Admissions per 1,000 member-years",128.21886056945186,128.21886056945186,True
+2010,beneficiaries,KPI Beneficiaries,112754.0,112754.0,True
+2010,claims,KPI Claims,1350500.0,1350500.0,True
+2010,ed_proxy_per_1000,"KPI ED proxy per 1,000 member-years",131.7243586622598,131.7243586622598,True
+2010,paid_amount,KPI Paid amount,286712060.0,286712060.0,True
+2010,paid_per_admission,KPI Paid per admission,9927.118099648913,9927.118099648913,True
+2010,paid_per_beneficiary,KPI Paid per beneficiary,2542.8105433066676,2542.8105433066676,True
+2010,paid_per_claim,KPI Paid per claim,212.30067382450943,212.30067382450943,True
+2010,readmission_proxy,KPI Readmission proxy rate,0.042992325460099845,0.0429923254600998,True
+2010,top5_payment_share,KPI Top 5% payment share,0.4308730508231848,0.4308730508231848,True

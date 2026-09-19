@@ -1,0 +1,23 @@
+measure,setting,value
+duplicate rows dropped,inpatient,0.0
+duplicate rows dropped,outpatient,0.0
+duplicate rows dropped,carrier,0.0
+invalid date claims,inpatient,0.0
+invalid date claims,outpatient,278.0
+invalid date claims,carrier,0.0
+outside study window claims,inpatient,226.0
+outside study window claims,outpatient,312.0
+outside study window claims,carrier,0.0
+negative payment claims,inpatient,55.0
+negative payment claims,outpatient,2557.0
+negative payment claims,carrier,0.0
+multi segment claims,inpatient,68.0
+multi segment claims,outpatient,10975.0
+multi segment claims,carrier,0.0
+malformed primary dx claims inpatient,all,0.0
+unmapped primary dx claims inpatient,all,0.0
+missing primary dx claims inpatient,all,27.0
+excluded payment invalid dates,all,392320.0
+excluded payment outside window,all,3207030.0
+source payment total deduplicated,all,1278388580.0
+source payment total with duplicates,all,1278388580.0

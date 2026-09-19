@@ -1,0 +1,8 @@
+kpi,legacy,dbt,passed
+claims,5587039.0,5587039.0,True
+paid_amount,1274789230.0,1274789230.0,True
+inpatient_stays,64359.0,64359.0,True
+readmission_eligible_index,64045.0,64045.0,True
+readmitted_stays,6349.0,6349.0,True
+top_payment,555707810.0,555707810.0,True
+provider_review_flags,6197.0,6197.0,True
