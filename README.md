@@ -97,8 +97,4 @@ Definitions, numerators, denominators, exclusions and caveats live in the [metri
 
 Synthetic data throughout. Monthly volume tapers in the source, so trends are not interpretable. The beneficiary summary reimbursement fields do not tie to claim payments and are not used. There is no discharge status, place of service or planned-readmission flag, so the readmission and ED measures are proxies. Prescription drug events are not loaded. Provider flags mostly reflect facility size on this data. No claim of savings, outcomes, fraud detection, HEDIS or CMS-HCC, HIPAA compliance, Epic experience or a Tableau dashboard is made. See [limitations](docs/limitations.md), [code mapping and limits](docs/code_mapping_and_limits.md) and [privacy and governance](docs/privacy_and_governance.md).
 
-## Interview-ready skills
-
-SQL and dimensional modeling on 5.6 million claims; claims domain logic (segments, payment fields, ICD-9 and HCPCS coding, stays and readmission windows); metric definition and governance; data quality and reconciliation; Python and pandas for independent validation; Excel with live formulas; BI design and stakeholder communication with honest caveats. A ready [interview guide](docs/interview_guide.md) covers the 90-second explanation and the questions this project should not be over-sold on.
-
 Code is MIT licensed. See [CONTRIBUTING](CONTRIBUTING.md).

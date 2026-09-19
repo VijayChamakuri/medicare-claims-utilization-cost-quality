@@ -51,7 +51,7 @@ Ten files verified against the manifest (275.5 MB including codebook and FAQ), w
 
 ## Overclaim term audit
 
-Search of all text in the repository for `HIPAA compliant`, `HEDIS`, `CMS-HCC`, `Epic`, `Clarity`, `Caboodle`, `real patients`, `saved`, `reduced`, `Tableau dashboard`, plus `savings` and `fraud`. `saved` and `reduced` do not appear. Every other occurrence is a negation, a limitation, an interview answer that denies the claim, or a contributor rule against adding it. No sentence claims certified HEDIS, CMS-HCC, HIPAA compliance, Epic experience, savings, fraud detection or a Tableau dashboard. No em dashes and no AI attribution appear in the repository.
+Search of all text in the repository for `HIPAA compliant`, `HEDIS`, `CMS-HCC`, `Epic`, `Clarity`, `Caboodle`, `real patients`, `saved`, `reduced`, `Tableau dashboard`, plus `savings` and `fraud`. `saved` and `reduced` do not appear. Every other occurrence is a negation, a limitation, or a contributor rule against adding it. No sentence claims certified HEDIS, CMS-HCC, HIPAA compliance, Epic experience, savings, fraud detection or a Tableau dashboard. No em dashes and no AI attribution appear in the repository.
 
 ## Not verified
 
