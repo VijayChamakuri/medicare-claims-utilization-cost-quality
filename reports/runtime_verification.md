@@ -56,4 +56,9 @@ Search of all text in the repository for `HIPAA compliant`, `HEDIS`, `CMS-HCC`, 
 ## Not verified
 
 - No Tableau workbook exists, so nothing was checked in Tableau.
-- The hosted CI result on GitHub is recorded in the pull or Actions history, not here.
+
+## Hosted CI (GitHub Actions)
+
+- Push run: lint, types, tests and the fixture pipeline passed on Python 3.11 and Python 3.12; README drift check passed.
+- Manual dispatch of the full workflow: the same two jobs passed, the official source link check passed (every CMS and AHRQ URL in `config/project.yml` responded), and the real-data job passed. That job downloaded all ten CMS files on the runner, verified hashes, built the warehouse, validated, exported and reported, and `git diff` of `README.md` and `reports/headline_kpis.json` against the committed versions was empty, so the published numbers reproduce from the official files on a clean machine (8 minutes 22 seconds end to end).
+- The real-data and link jobs also run weekly on a schedule.
