@@ -1,0 +1,354 @@
+{
+  "_note": "Derived by hand from tests/fixtures/raw (see tests/fixtures/README.md). Rates are [numerator, denominator, scale].",
+  "beneficiaries": {
+    "2008": 12,
+    "2009": 11,
+    "2010": 10
+  },
+  "member_months": {
+    "2008": 132,
+    "2009": 123,
+    "2010": 120
+  },
+  "claims": {
+    "inpatient": {
+      "2008": 9,
+      "2009": 6,
+      "2010": 1
+    },
+    "outpatient": {
+      "2008": 4,
+      "2009": 5,
+      "2010": 2
+    },
+    "carrier": {
+      "2008": 3,
+      "2009": 3,
+      "2010": 1
+    }
+  },
+  "claims_total": {
+    "2008": 16,
+    "2009": 14,
+    "2010": 4
+  },
+  "payment": {
+    "inpatient": {
+      "2008": 76000.0,
+      "2009": 80000.0,
+      "2010": 6500.0
+    },
+    "outpatient": {
+      "2008": 1400.0,
+      "2009": 1125.0,
+      "2010": 300.0
+    },
+    "carrier": {
+      "2008": 245.0,
+      "2009": 260.0,
+      "2010": 100.0
+    }
+  },
+  "payment_total": {
+    "2008": 77645.0,
+    "2009": 81385.0,
+    "2010": 6900.0
+  },
+  "payment_total_all_years": 165930.0,
+  "admissions": {
+    "2008": 8,
+    "2009": 6,
+    "2010": 1
+  },
+  "admissions_all_years": 15,
+  "admissions_per_1000_member_years": {
+    "2008": [
+      8,
+      11.0,
+      1000
+    ],
+    "2009": [
+      6,
+      10.25,
+      1000
+    ],
+    "2010": [
+      1,
+      10.0,
+      1000
+    ],
+    "all": [
+      15,
+      31.25,
+      1000
+    ]
+  },
+  "claims_per_1000_member_years": {
+    "2008": [
+      16,
+      11.0,
+      1000
+    ],
+    "2009": [
+      14,
+      10.25,
+      1000
+    ],
+    "2010": [
+      4,
+      10.0,
+      1000
+    ]
+  },
+  "ed_proxy_visits": {
+    "2008": 2,
+    "2009": 2,
+    "2010": 0
+  },
+  "ed_proxy_per_1000_member_years": {
+    "2008": [
+      2,
+      11.0,
+      1000
+    ],
+    "2009": [
+      2,
+      10.25,
+      1000
+    ],
+    "2010": [
+      0,
+      10.0,
+      1000
+    ]
+  },
+  "outpatient_visits_per_1000_member_years": {
+    "2008": [
+      4,
+      11.0,
+      1000
+    ],
+    "2009": [
+      5,
+      10.25,
+      1000
+    ],
+    "2010": [
+      2,
+      10.0,
+      1000
+    ]
+  },
+  "carrier_lines": {
+    "2008": 6,
+    "2009": 6,
+    "2010": 2
+  },
+  "unique_beneficiaries": {
+    "inpatient": {
+      "2008": 5,
+      "2009": 5,
+      "2010": 1
+    },
+    "outpatient": {
+      "2008": 4,
+      "2009": 4,
+      "2010": 2
+    },
+    "carrier": {
+      "2008": 3,
+      "2009": 3,
+      "2010": 1
+    }
+  },
+  "length_of_stay": {
+    "2008": [
+      38,
+      8
+    ],
+    "2009": [
+      16,
+      6
+    ],
+    "2010": [
+      5,
+      1
+    ],
+    "all": [
+      59,
+      15
+    ]
+  },
+  "payment_per_admission": {
+    "2008": [
+      76000,
+      8
+    ],
+    "2009": [
+      80000,
+      6
+    ],
+    "2010": [
+      6500,
+      1
+    ]
+  },
+  "payment_per_beneficiary": {
+    "2008": [
+      77645,
+      12
+    ],
+    "2009": [
+      81385,
+      11
+    ],
+    "2010": [
+      6900,
+      10
+    ]
+  },
+  "payment_per_claim": {
+    "2008": [
+      77645,
+      16
+    ],
+    "2009": [
+      81385,
+      14
+    ],
+    "2010": [
+      6900,
+      4
+    ]
+  },
+  "readmission": {
+    "2008": {
+      "eligible_index": 7,
+      "readmissions": 2,
+      "excluded_died_in_stay": 1,
+      "excluded_insufficient_followup": 0
+    },
+    "2009": {
+      "eligible_index": 6,
+      "readmissions": 0,
+      "excluded_died_in_stay": 0,
+      "excluded_insufficient_followup": 0
+    },
+    "2010": {
+      "eligible_index": 0,
+      "readmissions": 0,
+      "excluded_died_in_stay": 0,
+      "excluded_insufficient_followup": 1
+    },
+    "all": {
+      "eligible_index": 13,
+      "readmissions": 2
+    }
+  },
+  "top_5pct_payment_share": {
+    "2008": [
+      23680,
+      77645
+    ],
+    "2009": [
+      60070,
+      81385
+    ],
+    "2010": [
+      6500,
+      6900
+    ]
+  },
+  "top_5pct_beneficiary": {
+    "2008": "B01",
+    "2009": "B10",
+    "2010": "B07"
+  },
+  "risk_tier_counts": {
+    "2008": {
+      "not_assessed": 12
+    },
+    "2009": {
+      "high": 3,
+      "medium": 1,
+      "low": 7
+    },
+    "2010": {
+      "high": 4,
+      "low": 6
+    }
+  },
+  "review_flags": {
+    "2008": {
+      "N2": [
+        "HIGH_CLAIM_VOLUME"
+      ]
+    },
+    "2009": {
+      "F9": [
+        "HIGH_PAYMENT_PER_CLAIM"
+      ]
+    },
+    "2010": {}
+  },
+  "data_quality": {
+    "duplicate_rows_dropped": {
+      "inpatient": 1,
+      "outpatient": 0,
+      "carrier": 0
+    },
+    "invalid_date_claims": {
+      "inpatient": 1,
+      "outpatient": 0,
+      "carrier": 0
+    },
+    "outside_study_window_claims": {
+      "inpatient": 1,
+      "outpatient": 1,
+      "carrier": 0
+    },
+    "negative_payment_claims": {
+      "inpatient": 1,
+      "outpatient": 1,
+      "carrier": 0
+    },
+    "multi_segment_claims": {
+      "inpatient": 1,
+      "outpatient": 1,
+      "carrier": 0
+    },
+    "malformed_primary_dx_claims_inpatient": 1,
+    "unmapped_primary_dx_claims_inpatient": 1,
+    "missing_primary_dx_claims_inpatient": 1,
+    "excluded_payment_invalid_dates": 3000.0,
+    "excluded_payment_outside_window": 5200.0,
+    "source_payment_total_deduplicated": 174130.0,
+    "source_payment_total_with_duplicates": 181630.0
+  },
+  "condition_inpatient_2008": {
+    "108": [
+      2,
+      18000.0
+    ],
+    "98": [
+      1,
+      5000.0
+    ],
+    "101": [
+      2,
+      21000.0
+    ],
+    "49": [
+      2,
+      13500.0
+    ],
+    "122": [
+      1,
+      15000.0
+    ],
+    "unmapped": [
+      1,
+      3500.0
+    ]
+  }
+}

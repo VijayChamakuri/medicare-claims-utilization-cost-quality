@@ -1,0 +1,120 @@
+{
+  "documentation": {
+    "codebook": "de-10-codebook.pdf",
+    "faq": "de-10-faq.pdf",
+    "note": "Hashes of the retrieved PDFs identify the documentation version."
+  },
+  "files": {
+    "DE1_0_2008_to_2010_Carrier_Claims_Sample_1A.zip": {
+      "bytes": 113217928,
+      "kind": "carrier",
+      "members": [
+        "DE1_0_2008_to_2010_Carrier_Claims_Sample_1A.csv"
+      ],
+      "retrieved_at": "2026-09-19",
+      "sha256": "4b4038b5f6cd9c524fa3a655a3f467aef01af56c3cae0f08902a35a9945bed97",
+      "source_url": "https://downloads.cms.gov/files/DE1_0_2008_to_2010_Carrier_Claims_Sample_1A.zip"
+    },
+    "DE1_0_2008_to_2010_Carrier_Claims_Sample_1B.zip": {
+      "bytes": 113267827,
+      "kind": "carrier",
+      "members": [
+        "DE1_0_2008_to_2010_Carrier_Claims_Sample_1B.csv"
+      ],
+      "retrieved_at": "2026-09-19",
+      "sha256": "99149d9d40e3a1556264be87a26909f829f283366293798aab81b88e2a0f3acd",
+      "source_url": "https://downloads.cms.gov/files/DE1_0_2008_to_2010_Carrier_Claims_Sample_1B.zip"
+    },
+    "ccs_single_level_2015.zip": {
+      "bytes": 205587,
+      "kind": "reference",
+      "members": [
+        "prlabel 2014.csv",
+        "$dxref 2015.csv",
+        "$prref 2015.csv",
+        "dxlabel 2015.csv"
+      ],
+      "retrieved_at": "2026-09-19",
+      "sha256": "a1e31709cc4fa7d67fc254a7421ec9686030098af9225d5f7ba73ae28deaa283",
+      "source_url": "https://hcup-us.ahrq.gov/toolssoftware/ccs/Single_Level_CCS_2015.zip"
+    },
+    "de-10-codebook.pdf": {
+      "bytes": 820871,
+      "kind": "document",
+      "retrieved_at": "2026-09-19",
+      "sha256": "3d81fa7a1d9b513485de00b91a1f7070e8372b9090dbadf792a52d12f2542b66",
+      "source_url": "https://www.cms.gov/files/document/de-10-codebook.pdf-0"
+    },
+    "de-10-faq.pdf": {
+      "bytes": 150563,
+      "kind": "document",
+      "retrieved_at": "2026-09-19",
+      "sha256": "d44fbcb8b6740f2c1f9cf2024f4f435ab35992c35fac5aaa6ebf1b15e1dedef3",
+      "source_url": "https://www.cms.gov/files/document/de-10-frequently-asked-questions.pdf"
+    },
+    "de1_0_2008_beneficiary_summary_file_sample_1.zip": {
+      "bytes": 3119160,
+      "kind": "beneficiary",
+      "members": [
+        "DE1_0_2008_Beneficiary_Summary_File_Sample_1.csv"
+      ],
+      "retrieved_at": "2026-09-19",
+      "sha256": "2b0c9cbfb07a6eb46d5f96472c0891275a390b686c3fa34daae8d3e53d70b18b",
+      "source_url": "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2008_beneficiary_summary_file_sample_1.zip"
+    },
+    "de1_0_2008_to_2010_inpatient_claims_sample_1.zip": {
+      "bytes": 4162147,
+      "kind": "inpatient",
+      "members": [
+        "DE1_0_2008_to_2010_Inpatient_Claims_Sample_1.csv"
+      ],
+      "retrieved_at": "2026-09-19",
+      "sha256": "ac25124184d22863aff538607097d2d0c880d19f7d58f882f9d31129c492d893",
+      "source_url": "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2008_to_2010_inpatient_claims_sample_1.zip"
+    },
+    "de1_0_2008_to_2010_outpatient_claims_sample_1.zip": {
+      "bytes": 34456300,
+      "kind": "outpatient",
+      "members": [
+        "DE1_0_2008_to_2010_Outpatient_Claims_Sample_1.csv"
+      ],
+      "retrieved_at": "2026-09-19",
+      "sha256": "7c94a94c8c676511d0bbea2dae3e6511980bdb8e44003285a0619a7ef38f9495",
+      "source_url": "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2008_to_2010_outpatient_claims_sample_1.zip"
+    },
+    "de1_0_2009_beneficiary_summary_file_sample_1.zip": {
+      "bytes": 3177446,
+      "kind": "beneficiary",
+      "members": [
+        "DE1_0_2009_Beneficiary_Summary_File_Sample_1.csv"
+      ],
+      "retrieved_at": "2026-09-19",
+      "sha256": "dff1853368d8279cd60efabd067ad518decd5f200475134e0b4d0408880bb379",
+      "source_url": "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2009_beneficiary_summary_file_sample_1.zip"
+    },
+    "de1_0_2010_beneficiary_summary_file_sample_20.zip": {
+      "bytes": 2960588,
+      "kind": "beneficiary",
+      "members": [
+        "DE1_0_2010_Beneficiary_Summary_File_Sample_1.csv"
+      ],
+      "retrieved_at": "2026-09-19",
+      "sha256": "b28b8ac7ecc2ba2fb3138dbba74dd41a183a34d0322c0492f7a87a8e7dc1fdff",
+      "source_url": "https://www.cms.gov/research-statistics-data-and-systems/statistics-trends-and-reports/synpufs/downloads/de1_0_2010_beneficiary_summary_file_sample_20.zip"
+    }
+  },
+  "reference": {
+    "ccs_compact_file": "reference/ccs_icd9_dx_2015.csv",
+    "ccs_compact_sha256": "30d464da36786ed770ec220b1f5b5aed79dd59fe35ca9f964c0b3ae21f2225cf",
+    "ccs_source": "https://hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp",
+    "note": "2008-2010 claims use ICD-9-CM. CCS 2015 is the final ICD-9-CM release."
+  },
+  "schema_version": 1,
+  "source": {
+    "codebook_url": "https://www.cms.gov/files/document/de-10-codebook.pdf-0",
+    "collection_url": "https://data.cms.gov/collection/synthetic-medicare-enrollment-fee-for-service-claims-and-prescription-drug-event",
+    "faq_url": "https://www.cms.gov/files/document/de-10-frequently-asked-questions.pdf",
+    "name": "CMS 2008-2010 Data Entrepreneurs' Synthetic Public Use File (DE-SynPUF)",
+    "overview_url": "https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files/cms-2008-2010-data-entrepreneurs-synthetic-public-use-file-de-synpuf"
+  }
+}

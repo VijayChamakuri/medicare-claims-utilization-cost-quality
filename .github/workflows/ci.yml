@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: lint, types, tests, fixture pipeline (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.3.2
+      - run: uv sync --extra dev
+      - run: make test
+      - name: Fixture pipeline end to end
+        run: make fixture
+      - name: README numbers match the committed headline KPIs
+        run: make check-readme
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fixture-artifacts-python-${{ matrix.python-version }}
+          path: build/fixture
+          retention-days: 14
+
+  official-links:
+    name: official source links
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.3.2
+      - run: uv sync --extra dev
+      - run: make links
+
+  real-data:
+    name: CMS sample 1, real-data pipeline
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.3.2
+      - uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: cms-desynpuf-sample1-${{ hashFiles('data/data_manifest.json') }}
+      - run: uv sync --extra dev
+      - name: Download and verify hashes, build, validate, export, report
+        run: make all
+      - name: Committed headline numbers still reproduce (informational)
+        continue-on-error: true
+        run: git diff --exit-code -- reports/headline_kpis.json README.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sample1-artifacts
+          path: |
+            reports
+            excel
+            tableau/data
+            dashboard/index.html
+          retention-days: 30

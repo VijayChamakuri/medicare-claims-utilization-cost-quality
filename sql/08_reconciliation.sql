@@ -1,0 +1,145 @@
+-- 08 Reconciliation. Every check compares an independently derived expected value with the warehouse value.
+-- blocking = true means a failure stops the pipeline. Money tolerance is half a cent; counts must match exactly.
+
+create or replace table reconciliation_results as
+with checks(check_name, category, expected, actual, tolerance, blocking, detail) as (
+    select 'rows_raw_to_staging_inpatient', 'raw_to_staging',
+           (select count(distinct ("DESYNPUF_ID", "CLM_ID", coalesce("SEGMENT", '1'))) from raw_inpatient)::double,
+           (select count(*) from stg_ip)::double, 0.0, true, 'distinct source claim segments equal staged rows'
+    union all
+    select 'rows_raw_to_staging_outpatient', 'raw_to_staging',
+           (select count(distinct ("DESYNPUF_ID", "CLM_ID", coalesce("SEGMENT", '1'))) from raw_outpatient)::double,
+           (select count(*) from stg_op)::double, 0.0, true, 'distinct source claim segments equal staged rows'
+    union all
+    select 'rows_raw_to_staging_carrier', 'raw_to_staging',
+           (select count(distinct ("DESYNPUF_ID", "CLM_ID")) from raw_carrier)::double,
+           (select count(*) from stg_carrier_claim)::double, 0.0, true, 'distinct source claims equal staged claims'
+    union all
+    select 'rows_raw_to_staging_beneficiary', 'raw_to_staging',
+           (select count(distinct ("DESYNPUF_ID", bene_year)) from raw_beneficiary)::double,
+           (select count(*) from stg_beneficiary_year)::double, 0.0, true, 'distinct beneficiary-years equal staged rows'
+    union all
+    select 'claims_staging_to_header_inpatient', 'staging_to_fact',
+           (select count(distinct (beneficiary_id, claim_id)) from stg_ip)::double,
+           (select count(*) from fact_claim_header where setting = 'inpatient')::double, 0.0, true, 'segments merge into one claim'
+    union all
+    select 'claims_staging_to_header_outpatient', 'staging_to_fact',
+           (select count(distinct (beneficiary_id, claim_id)) from stg_op)::double,
+           (select count(*) from fact_claim_header where setting = 'outpatient')::double, 0.0, true, 'segments merge into one claim'
+    union all
+    select 'claims_staging_to_header_carrier', 'staging_to_fact',
+           (select count(*) from stg_carrier_claim)::double,
+           (select count(*) from fact_claim_header where setting = 'carrier')::double, 0.0, true, 'one header per carrier claim'
+    union all
+    select 'payment_source_to_header_total', 'staging_to_fact',
+           ((select coalesce(sum(clm_pmt_amt), 0) from stg_ip) + (select coalesce(sum(clm_pmt_amt), 0) from stg_op)
+            + (select coalesce(sum(line_nch_pmt_amt), 0) from stg_carrier_line))::double,
+           (select coalesce(sum(payment_amount), 0) from fact_claim_header)::double, 0.005, true,
+           'CLM_PMT_AMT and LINE_NCH_PMT_AMT_n in staging equal header payment_amount'
+    union all
+    select 'carrier_header_equals_line_payment', 'header_line',
+           (select coalesce(sum(line_nch_pmt_amt), 0) from fact_claim_line where setting = 'carrier')::double,
+           (select coalesce(sum(payment_amount), 0) from fact_claim_header where setting = 'carrier')::double, 0.005, true,
+           'carrier header payment equals the sum of its lines'
+    union all
+    select 'analytic_payment_to_monthly_mart', 'fact_to_mart',
+           (select coalesce(sum(payment_amount), 0) from fact_claim_header where is_analytic)::double,
+           (select coalesce(sum(payment_amount), 0) from mart_payment_monthly)::double, 0.005, true, 'monthly payment mart total'
+    union all
+    select 'analytic_payment_to_annual_mart', 'fact_to_mart',
+           (select coalesce(sum(payment_amount), 0) from fact_claim_header where is_analytic)::double,
+           (select coalesce(sum(payment_amount), 0) from mart_payment_annual)::double, 0.005, true, 'annual payment mart total'
+    union all
+    select 'analytic_claims_to_utilization_mart', 'fact_to_mart',
+           (select count(*) from fact_claim_header where is_analytic)::double,
+           (select coalesce(sum(claims), 0) from mart_utilization_monthly)::double, 0.0, true, 'monthly utilization claim total'
+    union all
+    select 'stays_to_utilization_mart', 'fact_to_mart',
+           (select count(*) from fact_inpatient_stay)::double,
+           (select coalesce(sum(admissions), 0) from mart_utilization_monthly)::double, 0.0, true, 'monthly admissions total'
+    union all
+    select 'stay_payment_to_inpatient_claims', 'fact_to_fact',
+           (select coalesce(sum(payment_amount), 0) from fact_claim_header where setting = 'inpatient' and is_analytic)::double,
+           (select coalesce(sum(payment_amount), 0) from fact_inpatient_stay)::double, 0.005, true, 'stays carry all inpatient payment'
+    union all
+    select 'stay_claims_to_inpatient_claims', 'fact_to_fact',
+           (select count(*) from fact_claim_header where setting = 'inpatient' and is_analytic)::double,
+           (select coalesce(sum(claim_count), 0) from fact_inpatient_stay)::double, 0.0, true, 'every analytic inpatient claim is in a stay'
+    union all
+    select 'key_unique_claim_header', 'keys', (select count(*) from fact_claim_header)::double,
+           (select count(distinct claim_key) from fact_claim_header)::double, 0.0, true, 'claim_key'
+    union all
+    select 'key_unique_inpatient_stay', 'keys', (select count(*) from fact_inpatient_stay)::double,
+           (select count(distinct stay_key) from fact_inpatient_stay)::double, 0.0, true, 'stay_key'
+    union all
+    select 'key_unique_claim_line', 'keys', (select count(*) from fact_claim_line)::double,
+           (select count(distinct (claim_key, line_num)) from fact_claim_line)::double, 0.0, true, 'claim_key + line_num'
+    union all
+    select 'key_unique_dim_beneficiary', 'keys', (select count(*) from dim_beneficiary)::double,
+           (select count(distinct beneficiary_id) from dim_beneficiary)::double, 0.0, true, 'beneficiary_id'
+    union all
+    select 'key_unique_dim_provider', 'keys', (select count(*) from dim_provider)::double,
+           (select count(distinct (provider_type, provider_id)) from dim_provider)::double, 0.0, true, 'provider_type + provider_id'
+    union all
+    select 'key_unique_dim_diagnosis', 'keys', (select count(*) from dim_diagnosis)::double,
+           (select count(distinct diagnosis_code) from dim_diagnosis)::double, 0.0, true, 'diagnosis_code'
+    union all
+    select 'key_unique_dim_procedure', 'keys', (select count(*) from dim_procedure)::double,
+           (select count(distinct procedure_code) from dim_procedure)::double, 0.0, true, 'procedure_code'
+    union all
+    select 'key_unique_beneficiary_year', 'keys', (select count(*) from fact_beneficiary_year)::double,
+           (select count(distinct (beneficiary_id, year)) from fact_beneficiary_year)::double, 0.0, true, 'beneficiary_id + year'
+    union all
+    select 'key_unique_member_month', 'keys', (select count(*) from mart_member_month)::double,
+           (select count(distinct (beneficiary_id, year, month)) from mart_member_month)::double, 0.0, true, 'beneficiary_id + year + month'
+    union all
+    select 'key_unique_provider_year', 'keys', (select count(*) from mart_provider_performance)::double,
+           (select count(distinct (provider_type, provider_id, year)) from mart_provider_performance)::double, 0.0, true, 'provider_type + provider_id + year'
+    union all
+    select 'fk_header_beneficiary_in_dimension', 'foreign_keys', 0.0,
+           (select count(*) from fact_claim_header h where not exists (select 1 from dim_beneficiary b where b.beneficiary_id = h.beneficiary_id))::double,
+           0.0, false, 'claims whose beneficiary is absent from every beneficiary summary file (informational)'
+    union all
+    select 'fk_header_setting_valid', 'foreign_keys', 0.0,
+           (select count(*) from fact_claim_header h where h.setting not in (select care_setting from dim_care_setting))::double,
+           0.0, true, 'claims with an unknown care setting'
+    union all
+    select 'stay_length_never_negative', 'dates', 0.0,
+           (select count(*) from fact_inpatient_stay where length_of_stay_days < 0)::double, 0.0, true, 'stays with discharge before admission'
+    union all
+    select 'analytic_claims_inside_study_window', 'dates', 0.0,
+           (select count(*) from fact_claim_header where is_analytic and not in_study_window)::double, 0.0, true, 'analytic claims outside the window'
+    union all
+    select 'critical_field_null_claim_id', 'nulls', 0.0,
+           ((select count(*) from raw_inpatient where "CLM_ID" is null or "DESYNPUF_ID" is null)
+            + (select count(*) from raw_outpatient where "CLM_ID" is null or "DESYNPUF_ID" is null)
+            + (select count(*) from raw_carrier where "CLM_ID" is null or "DESYNPUF_ID" is null))::double,
+           0.0, true, 'claims missing an ID'
+    union all
+    select 'critical_field_null_payment', 'nulls', 0.0,
+           (select count(*) from fact_claim_header where payment_amount is null)::double, 0.0, true, 'claims with no payment value'
+    union all
+    select 'member_months_never_exceed_12_per_year', 'eligibility', 0.0,
+           (select count(*) from fact_beneficiary_year where member_months > 12 or member_months < 0)::double, 0.0, true, 'beneficiary-years outside 0..12'
+), summary as (
+    -- Informational tie-out to the CMS beneficiary summary annual reimbursement fields. Skipped when they are blank.
+    select 'summary_medreimb_ip_' || y.year as check_name, 'informational' as category,
+           y.expected::double as expected, coalesce(c.payment_amount, 0)::double as actual,
+           abs(y.expected) * 0.02 as tolerance, false as blocking,
+           'MEDREIMB_IP versus inpatient claim payment (relative tolerance 2 percent)' as detail
+    from (select year, sum(medreimb_ip) as expected from fact_beneficiary_year group by 1) y
+    left join (select year, payment_amount from mart_payment_annual where setting = 'inpatient') c using (year)
+    union all
+    select 'summary_medreimb_op_' || y.year, 'informational', y.expected::double, coalesce(c.payment_amount, 0)::double,
+           abs(y.expected) * 0.02, false, 'MEDREIMB_OP versus outpatient claim payment (relative tolerance 2 percent)'
+    from (select year, sum(medreimb_op) as expected from fact_beneficiary_year group by 1) y
+    left join (select year, payment_amount from mart_payment_annual where setting = 'outpatient') c using (year)
+    union all
+    select 'summary_medreimb_car_' || y.year, 'informational', y.expected::double, coalesce(c.payment_amount, 0)::double,
+           abs(y.expected) * 0.02, false, 'MEDREIMB_CAR versus carrier claim payment (relative tolerance 2 percent)'
+    from (select year, sum(medreimb_car) as expected from fact_beneficiary_year group by 1) y
+    left join (select year, payment_amount from mart_payment_annual where setting = 'carrier') c using (year)
+)
+select check_name, category, expected, actual, abs(actual - expected) as difference, tolerance, blocking,
+       coalesce(abs(actual - expected) <= tolerance, true) as passed, detail
+from (select * from checks union all select * from summary);

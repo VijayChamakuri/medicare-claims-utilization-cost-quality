@@ -1,0 +1,80 @@
+# Single source of truth for the pipeline. Switching profile is a config change only.
+study:
+  start: "2008-01-01"
+  end: "2010-12-31"
+
+source:
+  name: "CMS 2008-2010 Data Entrepreneurs' Synthetic Public Use File (DE-SynPUF)"
+  overview_url: https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files/cms-2008-2010-data-entrepreneurs-synthetic-public-use-file-de-synpuf
+  collection_url: https://data.cms.gov/collection/synthetic-medicare-enrollment-fee-for-service-claims-and-prescription-drug-event
+  codebook_url: https://www.cms.gov/files/document/de-10-codebook.pdf-0
+  faq_url: https://www.cms.gov/files/document/de-10-frequently-asked-questions.pdf
+  documentation_version: "DE-SynPUF codebook and FAQ as retrieved (see data/data_manifest.json)"
+
+profile: sample1
+
+profiles:
+  # One documented CMS sample. Adding samples 2 to 20 means adding entries here, nothing else.
+  sample1:
+    raw_dir: data/raw
+    interim_dir: data/interim
+    warehouse: data/warehouse/claims_sample1.duckdb
+    manifest: data/data_manifest.json
+    files:
+      beneficiary:
+        - {year: 2008, name: de1_0_2008_beneficiary_summary_file_sample_1.zip, csv: DE1_0_2008_Beneficiary_Summary_File_Sample_1.csv, url: "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2008_beneficiary_summary_file_sample_1.zip"}
+        - {year: 2009, name: de1_0_2009_beneficiary_summary_file_sample_1.zip, csv: DE1_0_2009_Beneficiary_Summary_File_Sample_1.csv, url: "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2009_beneficiary_summary_file_sample_1.zip"}
+        # CMS links this file as "sample_20" on the sample 1 page; the CSV inside is Sample_1 and
+        # every beneficiary ID also appears in the 2008 sample 1 file (checked at ingest).
+        - {year: 2010, name: de1_0_2010_beneficiary_summary_file_sample_20.zip, csv: DE1_0_2010_Beneficiary_Summary_File_Sample_1.csv, url: "https://www.cms.gov/research-statistics-data-and-systems/statistics-trends-and-reports/synpufs/downloads/de1_0_2010_beneficiary_summary_file_sample_20.zip"}
+      inpatient:
+        - {name: de1_0_2008_to_2010_inpatient_claims_sample_1.zip, csv: DE1_0_2008_to_2010_Inpatient_Claims_Sample_1.csv, url: "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2008_to_2010_inpatient_claims_sample_1.zip"}
+      outpatient:
+        - {name: de1_0_2008_to_2010_outpatient_claims_sample_1.zip, csv: DE1_0_2008_to_2010_Outpatient_Claims_Sample_1.csv, url: "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2008_to_2010_outpatient_claims_sample_1.zip"}
+      carrier:
+        - {name: DE1_0_2008_to_2010_Carrier_Claims_Sample_1A.zip, csv: DE1_0_2008_to_2010_Carrier_Claims_Sample_1A.csv, url: "https://downloads.cms.gov/files/DE1_0_2008_to_2010_Carrier_Claims_Sample_1A.zip"}
+        - {name: DE1_0_2008_to_2010_Carrier_Claims_Sample_1B.zip, csv: DE1_0_2008_to_2010_Carrier_Claims_Sample_1B.csv, url: "https://downloads.cms.gov/files/DE1_0_2008_to_2010_Carrier_Claims_Sample_1B.zip"}
+    documents:
+      - {name: de-10-codebook.pdf, url: "https://www.cms.gov/files/document/de-10-codebook.pdf-0"}
+      - {name: de-10-faq.pdf, url: "https://www.cms.gov/files/document/de-10-frequently-asked-questions.pdf"}
+
+  # Small hand-calculated fixture used by tests and the fast CI job. Values are asserted exactly.
+  fixture:
+    raw_dir: tests/fixtures/raw
+    interim_dir: null
+    warehouse: data/warehouse/fixture.duckdb
+    manifest: null
+    files:
+      beneficiary:
+        - {year: 2008, csv: beneficiary_2008.csv}
+        - {year: 2009, csv: beneficiary_2009.csv}
+        - {year: 2010, csv: beneficiary_2010.csv}
+      inpatient: [{csv: inpatient.csv}]
+      outpatient: [{csv: outpatient.csv}]
+      carrier: [{csv: carrier.csv}]
+    documents: []
+
+reference:
+  ccs:
+    name: "AHRQ HCUP Clinical Classifications Software (CCS) for ICD-9-CM, single level, 2015"
+    zip_url: https://hcup-us.ahrq.gov/toolssoftware/ccs/Single_Level_CCS_2015.zip
+    landing_url: https://hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp
+    compact_file: reference/ccs_icd9_dx_2015.csv
+    zip_sha256: a1e31709cc4fa7d67fc254a7421ec9686030098af9225d5f7ba73ae28deaa283
+    icd9_era_note: "2008-2010 claims use ICD-9-CM. CCS 2015 is the final ICD-9-CM release."
+
+metrics:
+  readmission_window_days: 30
+  # HCPCS evaluation and management codes for emergency department visits (proxy, outpatient claims).
+  ed_hcpcs_codes: ["99281", "99282", "99283", "99284", "99285"]
+  top_share_percent: 5
+  review:
+    peer_min_providers: 20
+    min_claims: 30
+    iqr_multiplier: 3.0   # Tukey far-out fence: payment and volume are right-skewed, so 1.5 flags too many
+    top_n: 25
+  risk_tier:
+    comorbidity_points: {low_max: 1, medium_max: 3}     # 0-1 -> 0, 2-3 -> 1, 4+ -> 2
+    admission_points: {one: 2, two_plus: 3}
+    paid_points: {medium_min: 1000, high_min: 5000}      # prior-year paid amount, USD
+    tiers: {low_max: 1, medium_max: 3}                   # score 0-1 low, 2-3 medium, 4+ high

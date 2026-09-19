@@ -1,0 +1,138 @@
+# Single source for docs/metric_dictionary.md, the Excel Metric_Dictionary sheet and the Tableau field dictionary.
+# Payment fields keep their CMS names and are never relabeled "cost".
+metrics:
+  - name: Beneficiaries
+    category: Population
+    definition: Synthetic beneficiaries with a row in the year's beneficiary summary file.
+    numerator: Count of beneficiary-year rows
+    denominator: n/a
+    exclusions: none
+    unit: beneficiaries
+    source_fields: DESYNPUF_ID (beneficiary summary)
+    caveat: Synthetic people. DE-SynPUF is a 5 percent synthetic sample of 2008 beneficiaries.
+  - name: Member months
+    category: Population
+    definition: Months a beneficiary contributes to rates. A beneficiary-year contributes min(Part A coverage months, months alive in the year), placed from January.
+    numerator: Sum over beneficiary-years of min(BENE_HI_CVRAGE_TOT_MONS, months alive)
+    denominator: n/a
+    exclusions: Deceased beneficiaries stop after the month of BENE_DEATH_DT
+    unit: member months
+    source_fields: BENE_HI_CVRAGE_TOT_MONS, BENE_DEATH_DT
+    caveat: CMS gives a count of covered months, not which months. Placing them from January is an assumption.
+  - name: Claims per 1,000 member-years
+    category: Utilization
+    definition: Analytic claims divided by member years, times 1,000.
+    numerator: Analytic claims (beneficiary + CLM_ID within a setting, segments merged)
+    denominator: Member months divided by 12
+    exclusions: Claims with invalid dates, claims dated outside 2008-01-01 to 2010-12-31, duplicate rows
+    unit: claims per 1,000 member-years
+    source_fields: DESYNPUF_ID, CLM_ID, CLM_FROM_DT, CLM_THRU_DT, SEGMENT
+    caveat: Inpatient claims are dated by admission date.
+  - name: Inpatient admissions per 1,000 member-years
+    category: Utilization
+    definition: Continuous inpatient stays per 1,000 member-years. A claim admitted on or before the discharge date of the beneficiary's earlier stay continues that stay.
+    numerator: Inpatient stays by admission date
+    denominator: Member years
+    exclusions: Invalid or out-of-window inpatient claims
+    unit: admissions per 1,000 member-years
+    source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT, CLM_FROM_DT, CLM_THRU_DT
+    caveat: Transfers are merged; no discharge status field exists to identify them directly.
+  - name: ED visit proxy per 1,000 member-years
+    category: Utilization
+    definition: Outpatient claims carrying at least one HCPCS code from 99281 to 99285, per 1,000 member-years.
+    numerator: Analytic outpatient claims with an ED evaluation and management code
+    denominator: Member years
+    exclusions: none beyond analytic-claim rules
+    unit: ED proxy visits per 1,000 member-years
+    source_fields: HCPCS_CD_1 to HCPCS_CD_45 (outpatient)
+    caveat: DE-SynPUF has no revenue center codes, so this is a code-based proxy, not a validated ED measure.
+  - name: Outpatient visits per 1,000 member-years
+    category: Utilization
+    definition: Analytic outpatient claims per 1,000 member-years.
+    numerator: Analytic outpatient claims
+    denominator: Member years
+    exclusions: analytic-claim rules
+    unit: claims per 1,000 member-years
+    source_fields: outpatient claims file
+    caveat: A claim is not necessarily a distinct visit.
+  - name: Carrier service lines
+    category: Utilization
+    definition: Carrier line items (up to 13 per claim) that have a HCPCS code, a non-zero payment or a performing NPI. CMS pads unused slots with a 0.00 payment; those padded slots are not lines.
+    numerator: Analytic carrier lines
+    denominator: n/a
+    exclusions: analytic-claim rules
+    unit: lines
+    source_fields: HCPCS_CD_1..13, LINE_NCH_PMT_AMT_1..13, PRF_PHYSN_NPI_1..13
+    caveat: Line-level payment is the only carrier payment field.
+  - name: Total claim payment amount
+    category: Payment
+    definition: Medicare trust fund payment on analytic claims. Institutional claims use CLM_PMT_AMT (segments summed); carrier claims use LINE_NCH_PMT_AMT_1..13 (lines summed). Negative amounts are payment adjustments and are included.
+    numerator: Sum of payment on analytic claims
+    denominator: n/a
+    exclusions: Invalid-date and out-of-window claims are reported separately
+    unit: US dollars (synthetic)
+    source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
+    caveat: Not a cost, charge or allowed amount. Beneficiary summary MEDREIMB_* fields do not tie to claim payments and are not used.
+  - name: Payment per beneficiary
+    category: Payment
+    definition: Total claim payment amount divided by beneficiaries in the year.
+    numerator: Total claim payment amount
+    denominator: Beneficiary summary rows in the year
+    exclusions: analytic-claim rules
+    unit: US dollars per beneficiary (synthetic)
+    source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
+    caveat: Includes beneficiaries with no claims.
+  - name: Payment per admission
+    category: Payment
+    definition: Inpatient payment divided by inpatient stays.
+    numerator: Inpatient CLM_PMT_AMT on analytic claims
+    denominator: Inpatient stays by admission year
+    exclusions: analytic-claim rules
+    unit: US dollars per admission (synthetic)
+    source_fields: CLM_PMT_AMT
+    caveat: Payment on a claim dated by admission is attributed to the admission year.
+  - name: Payment concentration (top 5 percent)
+    category: Payment
+    definition: Share of a year's payment held by the highest-paid ceil(5 percent of beneficiaries) beneficiaries.
+    numerator: Payment of the top ceil(5 percent x N) beneficiaries
+    denominator: Total payment in the year
+    exclusions: none
+    unit: share
+    source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
+    caveat: Ties are broken by beneficiary ID.
+  - name: 30-day readmission proxy
+    category: Quality monitoring
+    definition: Share of eligible index stays followed by another stay beginning after the index discharge date and within 30 days.
+    numerator: Eligible index stays with a later stay in the window
+    denominator: Eligible index stays
+    exclusions: Invalid dates; beneficiary died between admit and discharge; discharge within 30 days of the end of the study period
+    unit: share of index stays
+    source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT, BENE_DEATH_DT
+    caveat: Measure-inspired proxy, not a certified measure. No planned-readmission or discharge-status field is available. Any stay can be both an index and a readmission.
+  - name: Mean length of stay
+    category: Utilization
+    definition: Mean of discharge date minus admission date over stays.
+    numerator: Sum of stay days
+    denominator: Stays
+    exclusions: analytic-claim rules
+    unit: days
+    source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT
+    caveat: About 5 percent of source stays disagree with CLM_UTLZTN_DAY_CNT; the date difference is used.
+  - name: Utilization risk tier
+    category: Quality monitoring
+    definition: Transparent points from prior-year information only. Comorbidity points from chronic condition flags (0-1 conditions 0, 2-3 conditions 1, 4 or more 2), admission points (0 stays 0, 1 stay 2, 2 or more 3), paid points (under 1,000 dollars 0, 1,000 to under 5,000 dollars 1, 5,000 or more 2). Score 0-1 low, 2-3 medium, 4 or more high.
+    numerator: n/a
+    denominator: n/a
+    exclusions: Beneficiaries with no prior-year row are not assessed
+    unit: tier
+    source_fields: SP_* chronic condition flags, claim payments, inpatient stays
+    caveat: Descriptive portfolio stratification. Not CMS-HCC, RAF or any official risk adjustment.
+  - name: Provider review flag
+    category: Provider operations
+    definition: A provider-year whose payment per claim or claim volume exceeds Q3 plus a multiple (default 3, Tukey far-out fence) of the interquartile range of its peers (same provider type, setting for facilities, and year), with a minimum claim count and peer count. The fence applies only when peers vary (IQR above zero).
+    numerator: n/a
+    denominator: n/a
+    exclusions: Groups with too few peers or claims, or with no spread among peers, are not flagged
+    unit: flag with reason codes
+    source_fields: PRVDR_NUM, PRF_PHYSN_NPI_1..13
+    caveat: A prompt for review only. It is not evidence of fraud, poor quality or provider performance.

@@ -1,0 +1,28 @@
+# Source data is public but large; download it with `medicare-claims download`.
+data/raw/*
+!data/raw/.gitkeep
+data/interim/
+data/warehouse/
+*.duckdb
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+
+# OS and editors
+.DS_Store
+.vscode/
+.idea/
+
+# Fixture runs write here so they never overwrite real-sample outputs
+build/
+exports/
