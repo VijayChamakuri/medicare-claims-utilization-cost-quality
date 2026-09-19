@@ -66,6 +66,35 @@ metrics:
   source_fields: BENE_HI_CVRAGE_TOT_MONS, BENE_DEATH_DT
   headline: false
   tableau_field: member_months
+- id: claims
+  name: Analytic claims
+  version: 1
+  category: Utilization
+  business_question: How many claims are in scope for analysis?
+  owner_role: Payer operations leader
+  description: 'Claims that pass the analytic rules: valid dates inside the study window, duplicates removed, segments merged.'
+  grain: claim
+  source_model: fact_claim_header
+  calculation: count(*) where is_analytic
+  numerator: Analytic claims (beneficiary + CLM_ID within a setting, segments merged)
+  denominator: n/a
+  inclusions: analytic claims (valid dates inside the study window, deduplicated, segments merged)
+  exclusions: Claims with invalid dates, claims dated outside 2008-01-01 to 2010-12-31, duplicate rows
+  valid_dimensions:
+  - year
+  - month
+  - setting
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks: &id001
+  - fact_to_mart claim counts
+  - independent pandas claim counts
+  known_limits: Inpatient claims are dated by admission date.
+  unit: claims
+  source_fields: DESYNPUF_ID, CLM_ID, CLM_FROM_DT, CLM_THRU_DT, SEGMENT
+  headline: true
+  tableau_field: claims
 - id: claims_per_1000
   name: Claims per 1,000 member-years
   version: 1
@@ -87,9 +116,7 @@ metrics:
   time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
   refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
     code change, not on a schedule
-  quality_checks:
-  - fact_to_mart claim counts
-  - independent pandas claim counts
+  quality_checks: *id001
   known_limits: Inpatient claims are dated by admission date.
   unit: claims per 1,000 member-years
   source_fields: DESYNPUF_ID, CLM_ID, CLM_FROM_DT, CLM_THRU_DT, SEGMENT
@@ -237,7 +264,7 @@ metrics:
   time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
   refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
     code change, not on a schedule
-  quality_checks:
+  quality_checks: &id002
   - header_line payment tie-out
   - independent pandas payments to the cent
   - Excel reconciliation sheet
@@ -277,6 +304,33 @@ metrics:
   source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
   headline: true
   tableau_field: payment_per_beneficiary
+- id: paid_per_claim
+  name: Payment per claim
+  version: 1
+  category: Payment
+  business_question: What is the average paid amount per analytic claim?
+  owner_role: Payer operations leader
+  description: Paid amount divided by analytic claims.
+  grain: year x setting
+  source_model: mart_payment_annual
+  calculation: paid amount / analytic claims
+  numerator: Paid amount (CLM_PMT_AMT + LINE_NCH_PMT_AMT)
+  denominator: Analytic claims
+  inclusions: analytic claims; negative adjustments included
+  exclusions: Invalid-date and out-of-window claims are reported separately
+  valid_dimensions:
+  - year
+  - setting
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks: *id002
+  known_limits: Not a cost, charge or allowed amount. Beneficiary summary MEDREIMB_* fields do not tie to claim payments and
+    are not used.
+  unit: dollars per claim
+  source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
+  headline: false
+  tableau_field: payment_per_claim
 - id: paid_per_admission
   name: Payment per admission
   version: 1

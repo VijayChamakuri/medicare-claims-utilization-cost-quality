@@ -90,3 +90,18 @@ def test_review_list_is_labeled_synthetic(workbook) -> None:
     ws = workbook[1]["Provider_Review"]
     text = " ".join(str(c.value) for row in ws.iter_rows(max_row=3) for c in row if c.value)
     assert "SYNTHETIC" in text and "not fraud" in text
+
+
+def test_print_settings_keep_the_executive_summary_readable(workbook) -> None:
+    wb = workbook[1]
+    ws = wb["Executive_Summary"]
+    assert ws.page_setup.orientation == "landscape"
+    assert ws.page_setup.fitToWidth == 2 and ws.page_setup.fitToHeight == 1
+    assert ws.sheet_properties.pageSetUpPr.fitToPage
+    assert len(ws.col_breaks.brk) == 1
+    assert "not real patient or provider performance" in ws.oddFooter.left.text
+    assert ws.oddFooter.right.text == "Page &P of &N"
+    assert ws.print_area
+    for other in wb.worksheets:
+        assert other.page_setup.orientation == "landscape" and other.page_setup.fitToWidth in (1, 2), other.title
+        assert other.oddHeader.left.text, other.title
