@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: claims_raw
+    description: Raw CMS DE-SynPUF sample tables loaded as text by `medicare-claims build` (src/medicare_claims/ingest.py), plus the AHRQ CCS reference. Downloads are hash-verified against data/data_manifest.json before load.
+    schema: main
+    tables:
+      - name: raw_beneficiary
+        description: Beneficiary summary files for 2008, 2009 and 2010, one row per beneficiary and file year.
+        tests:
+          - source_not_empty
+      - name: raw_inpatient
+        description: Inpatient claims, one row per claim segment.
+        tests:
+          - source_not_empty
+      - name: raw_outpatient
+        description: Outpatient claims, one row per claim segment.
+        tests:
+          - source_not_empty
+      - name: raw_carrier
+        description: Carrier claims with up to 13 line slots per row.
+        tests:
+          - source_not_empty
+      - name: ref_ccs_dx
+        description: AHRQ CCS 2015 single-level ICD-9-CM diagnosis mapping (pinned SHA-256 in reference/README.md).
+        columns:
+          - name: icd9_code
+            tests: [unique, not_null]

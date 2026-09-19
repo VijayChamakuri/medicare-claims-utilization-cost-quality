@@ -1,0 +1,10 @@
+# No credentials: DuckDB is a local file. CLAIMS_DUCKDB points at the warehouse built by the legacy
+# pipeline; dbt reads its raw_* tables (schema main) and writes its own models to schema dbt.
+medicare_claims:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('CLAIMS_DUCKDB', '../data/warehouse/claims_sample1.duckdb') }}"
+      schema: dbt
+      threads: 4

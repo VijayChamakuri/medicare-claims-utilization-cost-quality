@@ -26,3 +26,8 @@ coverage.xml
 # Fixture runs write here so they never overwrite real-sample outputs
 build/
 exports/
+
+# dbt build output
+dbt/target/
+dbt/logs/
+dbt/.user.yml

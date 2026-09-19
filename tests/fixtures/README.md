@@ -30,7 +30,7 @@ Twelve synthetic beneficiaries, three years, three settings. `expected_kpis.json
 | I03 | B01 | 2008-04-10 to 04-12 | 2 | 5,000 | |
 | I04 + I05 | B02 | 2008-05-01 to 05-10 | 9 | 12,000 + 9,000 | I05 admits on I04's discharge day: one continuous stay |
 | I06 (twice) + I07 | B03 | 2008-11-15 to 11-20; 12-10 to 12-15 | 5, 5 | 7,500; 6,000 | duplicate row dropped; I06 readmitted by I07 (20 days) |
-| I17 | B05 | 2008-03-15 to 03-18 | 3 | 3,500 | primary dx 99999 is well-formed but unmapped |
+| I17 | B05 | 2008-03-15 to 03-18 | 3 | 3,500 | primary dx 99999 is well-formed but unmapped (condition ID `unmapped_valid`) |
 | I11 | B12 | 2008-06-10 to 06-15 | 5 | 15,000 | died 2008-06-15: excluded from the readmission index |
 | I08, I09 | B04 | 2009-01-10 to 01-13; 02-20 to 02-21 | 3, 1 | 4,000; 500 | 38 days apart, so not a readmission |
 | I10 | B06 | 2009-06-01 to 06-03 | 2 | -2,000 | payment adjustment, no primary dx |
