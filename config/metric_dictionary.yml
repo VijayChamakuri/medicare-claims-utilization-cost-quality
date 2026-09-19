@@ -1,138 +1,447 @@
-# Single source for docs/metric_dictionary.md, the Excel Metric_Dictionary sheet and the Tableau field dictionary.
-# Payment fields keep their CMS names and are never relabeled "cost".
+# Canonical KPI contract. Single source for docs/metric_dictionary.md, the Excel Metric_Dictionary sheet,
+# the Tableau field dictionary and calculated-field notes, the dashboard definitions and tableau/expected_kpis.csv.
+# Payment fields keep their CMS names and are never relabeled "cost". Change rules: docs/metric_governance.md.
+contract_version: 2
 metrics:
-  - name: Beneficiaries
-    category: Population
-    definition: Synthetic beneficiaries with a row in the year's beneficiary summary file.
-    numerator: Count of beneficiary-year rows
-    denominator: n/a
-    exclusions: none
-    unit: beneficiaries
-    source_fields: DESYNPUF_ID (beneficiary summary)
-    caveat: Synthetic people. DE-SynPUF is a 5 percent synthetic sample of 2008 beneficiaries.
-  - name: Member months
-    category: Population
-    definition: Months a beneficiary contributes to rates. A beneficiary-year contributes min(Part A coverage months, months alive in the year), placed from January.
-    numerator: Sum over beneficiary-years of min(BENE_HI_CVRAGE_TOT_MONS, months alive)
-    denominator: n/a
-    exclusions: Deceased beneficiaries stop after the month of BENE_DEATH_DT
-    unit: member months
-    source_fields: BENE_HI_CVRAGE_TOT_MONS, BENE_DEATH_DT
-    caveat: CMS gives a count of covered months, not which months. Placing them from January is an assumption.
-  - name: Claims per 1,000 member-years
-    category: Utilization
-    definition: Analytic claims divided by member years, times 1,000.
-    numerator: Analytic claims (beneficiary + CLM_ID within a setting, segments merged)
-    denominator: Member months divided by 12
-    exclusions: Claims with invalid dates, claims dated outside 2008-01-01 to 2010-12-31, duplicate rows
-    unit: claims per 1,000 member-years
-    source_fields: DESYNPUF_ID, CLM_ID, CLM_FROM_DT, CLM_THRU_DT, SEGMENT
-    caveat: Inpatient claims are dated by admission date.
-  - name: Inpatient admissions per 1,000 member-years
-    category: Utilization
-    definition: Continuous inpatient stays per 1,000 member-years. A claim admitted on or before the discharge date of the beneficiary's earlier stay continues that stay.
-    numerator: Inpatient stays by admission date
-    denominator: Member years
-    exclusions: Invalid or out-of-window inpatient claims
-    unit: admissions per 1,000 member-years
-    source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT, CLM_FROM_DT, CLM_THRU_DT
-    caveat: Transfers are merged; no discharge status field exists to identify them directly.
-  - name: ED visit proxy per 1,000 member-years
-    category: Utilization
-    definition: Outpatient claims carrying at least one HCPCS code from 99281 to 99285, per 1,000 member-years.
-    numerator: Analytic outpatient claims with an ED evaluation and management code
-    denominator: Member years
-    exclusions: none beyond analytic-claim rules
-    unit: ED proxy visits per 1,000 member-years
-    source_fields: HCPCS_CD_1 to HCPCS_CD_45 (outpatient)
-    caveat: DE-SynPUF has no revenue center codes, so this is a code-based proxy, not a validated ED measure.
-  - name: Outpatient visits per 1,000 member-years
-    category: Utilization
-    definition: Analytic outpatient claims per 1,000 member-years.
-    numerator: Analytic outpatient claims
-    denominator: Member years
-    exclusions: analytic-claim rules
-    unit: claims per 1,000 member-years
-    source_fields: outpatient claims file
-    caveat: A claim is not necessarily a distinct visit.
-  - name: Carrier service lines
-    category: Utilization
-    definition: Carrier line items (up to 13 per claim) that have a HCPCS code, a non-zero payment or a performing NPI. CMS pads unused slots with a 0.00 payment; those padded slots are not lines.
-    numerator: Analytic carrier lines
-    denominator: n/a
-    exclusions: analytic-claim rules
-    unit: lines
-    source_fields: HCPCS_CD_1..13, LINE_NCH_PMT_AMT_1..13, PRF_PHYSN_NPI_1..13
-    caveat: Line-level payment is the only carrier payment field.
-  - name: Total claim payment amount
-    category: Payment
-    definition: Medicare trust fund payment on analytic claims. Institutional claims use CLM_PMT_AMT (segments summed); carrier claims use LINE_NCH_PMT_AMT_1..13 (lines summed). Negative amounts are payment adjustments and are included.
-    numerator: Sum of payment on analytic claims
-    denominator: n/a
-    exclusions: Invalid-date and out-of-window claims are reported separately
-    unit: US dollars (synthetic)
-    source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
-    caveat: Not a cost, charge or allowed amount. Beneficiary summary MEDREIMB_* fields do not tie to claim payments and are not used.
-  - name: Payment per beneficiary
-    category: Payment
-    definition: Total claim payment amount divided by beneficiaries in the year.
-    numerator: Total claim payment amount
-    denominator: Beneficiary summary rows in the year
-    exclusions: analytic-claim rules
-    unit: US dollars per beneficiary (synthetic)
-    source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
-    caveat: Includes beneficiaries with no claims.
-  - name: Payment per admission
-    category: Payment
-    definition: Inpatient payment divided by inpatient stays.
-    numerator: Inpatient CLM_PMT_AMT on analytic claims
-    denominator: Inpatient stays by admission year
-    exclusions: analytic-claim rules
-    unit: US dollars per admission (synthetic)
-    source_fields: CLM_PMT_AMT
-    caveat: Payment on a claim dated by admission is attributed to the admission year.
-  - name: Payment concentration (top 5 percent)
-    category: Payment
-    definition: Share of a year's payment held by the highest-paid ceil(5 percent of beneficiaries) beneficiaries.
-    numerator: Payment of the top ceil(5 percent x N) beneficiaries
-    denominator: Total payment in the year
-    exclusions: none
-    unit: share
-    source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
-    caveat: Ties are broken by beneficiary ID.
-  - name: 30-day readmission proxy
-    category: Quality monitoring
-    definition: Share of eligible index stays followed by another stay beginning after the index discharge date and within 30 days.
-    numerator: Eligible index stays with a later stay in the window
-    denominator: Eligible index stays
-    exclusions: Invalid dates; beneficiary died between admit and discharge; discharge within 30 days of the end of the study period
-    unit: share of index stays
-    source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT, BENE_DEATH_DT
-    caveat: Measure-inspired proxy, not a certified measure. No planned-readmission or discharge-status field is available. Any stay can be both an index and a readmission.
-  - name: Mean length of stay
-    category: Utilization
-    definition: Mean of discharge date minus admission date over stays.
-    numerator: Sum of stay days
-    denominator: Stays
-    exclusions: analytic-claim rules
-    unit: days
-    source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT
-    caveat: About 5 percent of source stays disagree with CLM_UTLZTN_DAY_CNT; the date difference is used.
-  - name: Utilization risk tier
-    category: Quality monitoring
-    definition: Transparent points from prior-year information only. Comorbidity points from chronic condition flags (0-1 conditions 0, 2-3 conditions 1, 4 or more 2), admission points (0 stays 0, 1 stay 2, 2 or more 3), paid points (under 1,000 dollars 0, 1,000 to under 5,000 dollars 1, 5,000 or more 2). Score 0-1 low, 2-3 medium, 4 or more high.
-    numerator: n/a
-    denominator: n/a
-    exclusions: Beneficiaries with no prior-year row are not assessed
-    unit: tier
-    source_fields: SP_* chronic condition flags, claim payments, inpatient stays
-    caveat: Descriptive portfolio stratification. Not CMS-HCC, RAF or any official risk adjustment.
-  - name: Provider review flag
-    category: Provider operations
-    definition: A provider-year whose payment per claim or claim volume exceeds Q3 plus a multiple (default 3, Tukey far-out fence) of the interquartile range of its peers (same provider type, setting for facilities, and year), with a minimum claim count and peer count. The fence applies only when peers vary (IQR above zero).
-    numerator: n/a
-    denominator: n/a
-    exclusions: Groups with too few peers or claims, or with no spread among peers, are not flagged
-    unit: flag with reason codes
-    source_fields: PRVDR_NUM, PRF_PHYSN_NPI_1..13
-    caveat: A prompt for review only. It is not evidence of fraud, poor quality or provider performance.
+- id: beneficiaries
+  name: Beneficiaries
+  version: 1
+  category: Population
+  business_question: How many synthetic beneficiaries are in the population each year?
+  owner_role: Data owner
+  description: Synthetic beneficiaries with a row in the year's beneficiary summary file.
+  grain: beneficiary-year
+  source_model: fact_beneficiary_year
+  calculation: count(*) of beneficiary-year rows
+  numerator: Count of beneficiary-year rows
+  denominator: n/a
+  inclusions: every beneficiary summary row for the year
+  exclusions: none
+  valid_dimensions:
+  - year
+  - sex
+  - race
+  - age_band
+  - utilization_risk_tier
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - key_unique_beneficiary_year
+  - dbt unique_combination fact_beneficiary_year
+  known_limits: Synthetic people. DE-SynPUF is a 5 percent synthetic sample of 2008 beneficiaries.
+  unit: beneficiaries
+  source_fields: DESYNPUF_ID (beneficiary summary)
+  headline: true
+  tableau_field: beneficiaries
+- id: member_months
+  name: Member months
+  version: 1
+  category: Population
+  business_question: How much eligibility exposure do rates use as their denominator?
+  owner_role: Data owner
+  description: Months a beneficiary contributes to rates. A beneficiary-year contributes min(Part A coverage months, months
+    alive in the year), placed from January.
+  grain: beneficiary-year-month
+  source_model: mart_member_month
+  calculation: count(*) of member-month rows
+  numerator: Sum over beneficiary-years of min(BENE_HI_CVRAGE_TOT_MONS, months alive)
+  denominator: n/a
+  inclusions: months within Part A coverage and before death
+  exclusions: Deceased beneficiaries stop after the month of BENE_DEATH_DT
+  valid_dimensions:
+  - year
+  - month
+  - sex
+  - race
+  - age_band
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - key_unique_member_month
+  - eligibility reconciliation
+  known_limits: CMS gives a count of covered months, not which months. Placing them from January is an assumption.
+  unit: member months
+  source_fields: BENE_HI_CVRAGE_TOT_MONS, BENE_DEATH_DT
+  headline: false
+  tableau_field: member_months
+- id: claims_per_1000
+  name: Claims per 1,000 member-years
+  version: 1
+  category: Utilization
+  business_question: How much claim volume is there relative to eligible exposure?
+  owner_role: Payer operations leader
+  description: Analytic claims divided by member years, times 1,000.
+  grain: year x setting
+  source_model: mart_utilization_annual
+  calculation: claims / (member_months / 12) * 1000
+  numerator: Analytic claims (beneficiary + CLM_ID within a setting, segments merged)
+  denominator: Member months divided by 12
+  inclusions: analytic claims (valid dates inside the study window, deduplicated, segments merged)
+  exclusions: Claims with invalid dates, claims dated outside 2008-01-01 to 2010-12-31, duplicate rows
+  valid_dimensions:
+  - year
+  - setting
+  - month
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - fact_to_mart claim counts
+  - independent pandas claim counts
+  known_limits: Inpatient claims are dated by admission date.
+  unit: claims per 1,000 member-years
+  source_fields: DESYNPUF_ID, CLM_ID, CLM_FROM_DT, CLM_THRU_DT, SEGMENT
+  headline: true
+  tableau_field: claims_per_1000_member_years
+- id: admissions_per_1000
+  name: Inpatient admissions per 1,000 member-years
+  version: 1
+  category: Utilization
+  business_question: How often are synthetic beneficiaries admitted, relative to exposure?
+  owner_role: Payer operations leader
+  description: Continuous inpatient stays per 1,000 member-years. A claim admitted on or before the discharge date of the
+    beneficiary's earlier stay continues that stay.
+  grain: year
+  source_model: mart_utilization_annual
+  calculation: continuous stays by admission year / member years * 1000
+  numerator: Inpatient stays by admission date
+  denominator: Member years
+  inclusions: analytic inpatient claims merged into continuous stays
+  exclusions: Invalid or out-of-window inpatient claims
+  valid_dimensions:
+  - year
+  - month
+  - utilization_risk_tier
+  - sex
+  - race
+  - age_band
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - fact_to_fact stays
+  - independent pandas admissions
+  known_limits: Transfers are merged; no discharge status field exists to identify them directly.
+  unit: admissions per 1,000 member-years
+  source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT, CLM_FROM_DT, CLM_THRU_DT
+  headline: true
+  tableau_field: admissions_per_1000_member_years
+- id: ed_proxy_per_1000
+  name: ED visit proxy per 1,000 member-years
+  version: 1
+  category: Utilization
+  business_question: How much emergency department use is there, as far as outpatient codes can show it?
+  owner_role: Quality analyst
+  description: Outpatient claims carrying at least one HCPCS code from 99281 to 99285, per 1,000 member-years.
+  grain: year
+  source_model: mart_utilization_annual
+  calculation: outpatient claims with HCPCS 99281-99285 / member years * 1000
+  numerator: Analytic outpatient claims with an ED evaluation and management code
+  denominator: Member years
+  inclusions: analytic outpatient claims with at least one ED evaluation and management code
+  exclusions: none beyond analytic-claim rules
+  valid_dimensions:
+  - year
+  - month
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - independent pandas ED proxy
+  known_limits: DE-SynPUF has no revenue center codes, so this is a code-based proxy, not a validated ED measure.
+  unit: ED proxy visits per 1,000 member-years
+  source_fields: HCPCS_CD_1 to HCPCS_CD_45 (outpatient)
+  headline: true
+  tableau_field: ed_proxy_per_1000_member_years
+- id: outpatient_per_1000
+  name: Outpatient visits per 1,000 member-years
+  version: 1
+  category: Utilization
+  business_question: How much outpatient claim volume is there relative to exposure?
+  owner_role: Payer operations leader
+  description: Analytic outpatient claims per 1,000 member-years.
+  grain: year
+  source_model: mart_utilization_annual
+  calculation: analytic outpatient claims / member years * 1000
+  numerator: Analytic outpatient claims
+  denominator: Member years
+  inclusions: analytic outpatient claims
+  exclusions: analytic-claim rules
+  valid_dimensions:
+  - year
+  - month
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - fact_to_mart claim counts
+  known_limits: A claim is not necessarily a distinct visit.
+  unit: claims per 1,000 member-years
+  source_fields: outpatient claims file
+  headline: false
+  tableau_field: outpatient_visits_per_1000_member_years
+- id: carrier_service_lines
+  name: Carrier service lines
+  version: 1
+  category: Utilization
+  business_question: How many professional service lines were billed?
+  owner_role: Payer operations leader
+  description: Carrier line items (up to 13 per claim) that have a HCPCS code, a non-zero payment or a performing NPI. CMS
+    pads unused slots with a 0.00 payment; those padded slots are not lines.
+  grain: claim line
+  source_model: fact_claim_line
+  calculation: count of carrier lines with a HCPCS code, an NPI or a non-zero payment
+  numerator: Analytic carrier lines
+  denominator: n/a
+  inclusions: carrier line slots that carry content
+  exclusions: analytic-claim rules
+  valid_dimensions:
+  - year
+  - month
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - header_line reconciliation
+  - padded-slot regression test
+  known_limits: Line-level payment is the only carrier payment field.
+  unit: lines
+  source_fields: HCPCS_CD_1..13, LINE_NCH_PMT_AMT_1..13, PRF_PHYSN_NPI_1..13
+  headline: false
+  tableau_field: carrier_service_lines
+- id: paid_amount
+  name: Total claim payment amount
+  version: 1
+  category: Payment
+  business_question: How much did Medicare pay on these synthetic claims, and where?
+  owner_role: Payer operations leader
+  description: Medicare trust fund payment on analytic claims. Institutional claims use CLM_PMT_AMT (segments summed); carrier
+    claims use LINE_NCH_PMT_AMT_1..13 (lines summed). Negative amounts are payment adjustments and are included.
+  grain: claim
+  source_model: fact_claim_header
+  calculation: sum(CLM_PMT_AMT) for institutional claims + sum(LINE_NCH_PMT_AMT) for carrier lines
+  numerator: Sum of payment on analytic claims
+  denominator: n/a
+  inclusions: analytic claims; negative adjustments included
+  exclusions: Invalid-date and out-of-window claims are reported separately
+  valid_dimensions:
+  - year
+  - month
+  - setting
+  - sex
+  - race
+  - age_band
+  - utilization_risk_tier
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - header_line payment tie-out
+  - independent pandas payments to the cent
+  - Excel reconciliation sheet
+  known_limits: Not a cost, charge or allowed amount. Beneficiary summary MEDREIMB_* fields do not tie to claim payments and
+    are not used.
+  unit: US dollars (synthetic)
+  source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
+  headline: true
+  tableau_field: payment_amount
+- id: paid_per_beneficiary
+  name: Payment per beneficiary
+  version: 1
+  category: Payment
+  business_question: What is the average paid amount per synthetic beneficiary?
+  owner_role: Payer operations leader
+  description: Total claim payment amount divided by beneficiaries in the year.
+  grain: year
+  source_model: mart_payment_annual
+  calculation: paid amount / beneficiaries (all beneficiaries, including those with no claims)
+  numerator: Total claim payment amount
+  denominator: Beneficiary summary rows in the year
+  inclusions: all beneficiaries in the year
+  exclusions: analytic-claim rules
+  valid_dimensions:
+  - year
+  - sex
+  - race
+  - age_band
+  - utilization_risk_tier
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - fact_to_mart payment totals
+  known_limits: Includes beneficiaries with no claims.
+  unit: US dollars per beneficiary (synthetic)
+  source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
+  headline: true
+  tableau_field: payment_per_beneficiary
+- id: paid_per_admission
+  name: Payment per admission
+  version: 1
+  category: Payment
+  business_question: What is the average inpatient paid amount per continuous stay?
+  owner_role: Payer operations leader
+  description: Inpatient payment divided by inpatient stays.
+  grain: year
+  source_model: fact_inpatient_stay
+  calculation: inpatient paid amount / continuous stays
+  numerator: Inpatient CLM_PMT_AMT on analytic claims
+  denominator: Inpatient stays by admission year
+  inclusions: continuous inpatient stays
+  exclusions: analytic-claim rules
+  valid_dimensions:
+  - year
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - fact_to_fact stay payments
+  known_limits: Payment on a claim dated by admission is attributed to the admission year.
+  unit: US dollars per admission (synthetic)
+  source_fields: CLM_PMT_AMT
+  headline: false
+  tableau_field: payment_per_admission
+- id: top5_payment_share
+  name: Payment concentration (top 5 percent)
+  version: 1
+  category: Payment
+  business_question: How concentrated is payment among the highest-paid beneficiaries?
+  owner_role: Payer operations leader
+  description: Share of a year's payment held by the highest-paid ceil(5 percent of beneficiaries) beneficiaries.
+  grain: year
+  source_model: mart_payment_concentration
+  calculation: paid amount of the top ceil(5% of beneficiaries) / total paid amount
+  numerator: Payment of the top ceil(5 percent x N) beneficiaries
+  denominator: Total payment in the year
+  inclusions: all beneficiaries in the year, ranked by paid amount
+  exclusions: none
+  valid_dimensions:
+  - year
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - independent pandas concentration
+  known_limits: Ties are broken by beneficiary ID.
+  unit: share
+  source_fields: CLM_PMT_AMT, LINE_NCH_PMT_AMT_1..13
+  headline: true
+  tableau_field: top_share
+- id: readmission_proxy
+  name: 30-day readmission proxy
+  version: 1
+  category: Quality monitoring
+  business_question: How often is a continuous inpatient stay followed by another admission within 30 days?
+  owner_role: Quality analyst
+  description: Share of eligible index stays followed by another stay beginning after the index discharge date and within
+    30 days.
+  grain: index stay
+  source_model: mart_quality_monitoring
+  calculation: readmitted eligible index stays / eligible index stays
+  numerator: Eligible index stays with a later stay in the window
+  denominator: Eligible index stays
+  inclusions: continuous stays with valid dates and a full 30-day follow-up window
+  exclusions: Invalid dates; beneficiary died between admit and discharge; discharge within 30 days of the end of the study
+    period
+  valid_dimensions:
+  - year
+  - utilization_risk_tier
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - dbt assert_readmission_denominator_matches_index
+  - independent pandas readmission proxy
+  known_limits: Measure-inspired proxy, not a certified measure. No planned-readmission or discharge-status field is available.
+    Any stay can be both an index and a readmission.
+  unit: share of index stays
+  source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT, BENE_DEATH_DT
+  headline: true
+  tableau_field: readmission_rate
+- id: mean_los
+  name: Mean length of stay
+  version: 1
+  category: Utilization
+  business_question: How long are continuous inpatient stays on average?
+  owner_role: Quality analyst
+  description: Mean of discharge date minus admission date over stays.
+  grain: stay
+  source_model: fact_inpatient_stay
+  calculation: avg(discharge date - admission date)
+  numerator: Sum of stay days
+  denominator: Stays
+  inclusions: continuous stays with valid dates
+  exclusions: analytic-claim rules
+  valid_dimensions:
+  - year
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - dates reconciliation (no negative length of stay)
+  known_limits: About 5 percent of source stays disagree with CLM_UTLZTN_DAY_CNT; the date difference is used.
+  unit: days
+  source_fields: CLM_ADMSN_DT, NCH_BENE_DSCHRG_DT
+  headline: false
+  tableau_field: mean_length_of_stay_days
+- id: utilization_risk_tier
+  name: Utilization risk tier
+  version: 1
+  category: Quality monitoring
+  business_question: Which synthetic beneficiaries had heavy prior-year utilization, as a transparent starting list?
+  owner_role: Quality analyst
+  description: Transparent points from prior-year information only. Comorbidity points from chronic condition flags (0-1 conditions
+    0, 2-3 conditions 1, 4 or more 2), admission points (0 stays 0, 1 stay 2, 2 or more 3), paid points (under 1,000 dollars
+    0, 1,000 to under 5,000 dollars 1, 5,000 or more 2). Score 0-1 low, 2-3 medium, 4 or more high.
+  grain: beneficiary-year
+  source_model: mart_member_risk
+  calculation: points from prior-year chronic flags, admissions and paid amount, cut into low/medium/high
+  numerator: n/a
+  denominator: n/a
+  inclusions: beneficiary-years with a prior study year
+  exclusions: Beneficiaries with no prior-year row are not assessed
+  valid_dimensions:
+  - year
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - dbt unique_combination mart_member_risk
+  - fixture tier assertions
+  known_limits: Descriptive portfolio stratification. Not CMS-HCC, RAF or any official risk adjustment.
+  unit: tier
+  source_fields: SP_* chronic condition flags, claim payments, inpatient stays
+  headline: false
+  tableau_field: utilization_risk_tier
+- id: provider_review_flag
+  name: Provider review flag
+  version: 1
+  category: Provider operations
+  business_question: Which facilities or NPIs sit far above same-type peers and should be looked at first?
+  owner_role: Payer operations leader
+  description: A provider-year whose payment per claim or claim volume exceeds Q3 plus a multiple (default 3, Tukey far-out
+    fence) of the interquartile range of its peers (same provider type, setting for facilities, and year), with a minimum
+    claim count and peer count. The fence applies only when peers vary (IQR above zero).
+  grain: provider-type-year
+  source_model: mart_provider_performance
+  calculation: claims or paid per claim above Q3 + 3.0 x IQR of peers, with at least 20 peers and 30 claims and IQR > 0
+  numerator: n/a
+  denominator: n/a
+  inclusions: providers meeting the minimum claim count in peer groups of the minimum size
+  exclusions: Groups with too few peers or claims, or with no spread among peers, are not flagged
+  valid_dimensions:
+  - year
+  - provider_type
+  time_basis: 'calendar year of service (inpatient: admission date); monthly views use the month of service'
+  refresh_expectation: rebuilt on every pipeline run from the pinned CMS sample; the source is static, so the refresh is on
+    code change, not on a schedule
+  quality_checks:
+  - key_unique_provider_year
+  - fixture provider flag assertions
+  known_limits: A prompt for review only. It is not evidence of fraud, poor quality or provider performance.
+  unit: flag with reason codes
+  source_fields: PRVDR_NUM, PRF_PHYSN_NPI_1..13
+  headline: false
+  tableau_field: review_flag

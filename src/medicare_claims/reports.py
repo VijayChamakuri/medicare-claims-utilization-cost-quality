@@ -198,14 +198,33 @@ def table_inventory(con: duckdb.DuckDBPyConnection, config: Config) -> str:
 def metric_dictionary_doc(config: Config) -> str:
     from medicare_claims.export import metric_dictionary
 
+    frame = metric_dictionary(config)
     lines = ["# Metric dictionary", "", f"> {BANNER}", "",
-             "Generated from `config/metric_dictionary.yml`, the single source for this page, the Excel `Metric_Dictionary` sheet and the Tableau notes. Payment fields keep their CMS names and are never called \"cost\".", ""]
-    for r in metric_dictionary(config).itertuples():
-        lines += [f"## {r.name}", "", f"*Category:* {r.category}. *Unit:* {r.unit}.", "", r.definition, "",
-                  f"- **Numerator:** {r.numerator}", f"- **Denominator:** {r.denominator}", f"- **Exclusions:** {r.exclusions}",
-                  f"- **Source fields:** {r.source_fields}", f"- **Caveat:** {r.caveat}", ""]
+             f"Generated from `config/metric_dictionary.yml` (contract version {int(frame['contract_version'].iloc[0])}), the single "
+             "source for this page, the Excel `Metric_Dictionary` sheet, the Tableau field dictionary and "
+             "`tableau/expected_kpis.csv`. Change rules: [metric governance](metric_governance.md).", ""]
+    for r in frame.itertuples():
+        lines += [f"## {r.name}", "",
+                  f"- **ID and version:** `{r.id}` v{r.version}" + (" (headline KPI)" if r.headline else ""),
+                  f"- **Business question:** {r.business_question}",
+                  f"- **Owner role:** {r.owner_role}",
+                  f"- **Description:** {r.description}",
+                  f"- **Grain:** {r.grain}",
+                  f"- **Source model:** `{r.source_model}`",
+                  f"- **Calculation:** {r.calculation}",
+                  f"- **Numerator:** {r.numerator}",
+                  f"- **Denominator:** {r.denominator}",
+                  f"- **Inclusions:** {r.inclusions}",
+                  f"- **Exclusions:** {r.exclusions}",
+                  f"- **Valid dimensions:** {r.valid_dimensions}",
+                  f"- **Time basis:** {r.time_basis}",
+                  f"- **Refresh expectation:** {r.refresh_expectation}",
+                  f"- **Quality checks:** {r.quality_checks}",
+                  f"- **Unit:** {r.unit}",
+                  f"- **Source fields:** {r.source_fields}",
+                  f"- **Known limits:** {r.known_limits}",
+                  f"- **Tableau field:** `{r.tableau_field}`", ""]
     return "\n".join(lines)
-
 
 def write_reports(con: duckdb.DuckDBPyConnection, config: Config, run_independent: bool = True) -> dict[str, Any]:
     out_dir = config.reports_dir
