@@ -11,10 +11,12 @@ flowchart LR
     D -->|02 dimensions, 03 facts| E[Star schema]
     E -->|04 to 07 marts| F[Utilization, payment, quality, provider marts]
     F -->|08 reconciliation| G{Blocking checks}
+    C -->|dbt models generated from sql/| M[dbt schema]
+    M -->|row-for-row and KPI equivalence| F
     F --> H[exports CSV]
-    H --> I[Excel workbook]
-    H --> J[Offline dashboard]
-    H --> K[Tableau extracts]
+    H --> I[Excel workbook and executive PDF]
+    H --> J[Offline HTML dashboard]
+    H --> K[Tableau extracts, Hyper, packaged .twbx]
     B -->|pandas, no SQL| L[Independent recomputation]
     L --> G
 ```
@@ -26,7 +28,8 @@ flowchart LR
 3. **Model (`02`, `03`).** Dimensions and claim facts. The claim key is beneficiary plus `CLM_ID`; CMS `SEGMENT` records (at most two) merge into one claim.
 4. **Marts (`04` to `07`).** Member months, utilization, payment, quality proxies, risk tiers, provider review flags.
 5. **Reconciliation (`08` and `validation.py`).** SQL checks that stop the run, plus an independent pandas recomputation.
-6. **Consumers.** Excel, the offline dashboard and the Tableau extracts all read the same aggregated datasets (`export.py`).
+6. **dbt layer (`dbt/`).** `scripts/gen_dbt_models.py` turns every statement in `sql/` into a dbt model with `ref()`, `source()` and vars, so dbt runs exactly the validated logic. dbt adds grain, key, relationship and accepted-values tests, the blocking reconciliations as singular tests, and exposures for the Tableau workbook, Excel review and executive summary. `medicare-claims dbt` builds it into schema `dbt` and compares every model with the legacy table row for row, then the headline KPIs. The legacy SQL path stays the default build until a deliberate switch; see the [decision log](decision_log.md).
+7. **Consumers.** Excel, the offline dashboard and the Tableau package all read the same aggregated datasets (`export.py`, `tableau.py`). The Tableau workbook is written as XML by `src/medicare_claims/twb.py` and packaged with one Hyper extract per data source.
 
 ## Star schema
 
