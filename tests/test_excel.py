@@ -32,8 +32,8 @@ def test_rates_are_formulas_and_counts_are_values(workbook) -> None:
     header = {c.value: c.column_letter for c in ws[HEADER_ROW]}
     row = HEADER_ROW + 1
     assert ws[f"{header['Beneficiaries']}{row}"].value == 12
-    assert str(ws[f"{header['Admissions_per_1000_member_years']}{row}"].value).startswith("=IF(")
-    assert str(ws[f"{header['Readmission_proxy']}{row}"].value).startswith("=IF(")
+    assert str(ws[f"{header['Admissions per 1000 member years']}{row}"].value).startswith("=IF(")
+    assert str(ws[f"{header['Readmission proxy']}{row}"].value).startswith("=IF(")
     assert ws[f"{header['Admissions']}{row}"].value == 8
     util = workbook[1]["Monthly_Utilization"]
     assert any(str(c.value).startswith("=IF(") for c in util[HEADER_ROW + 1])
@@ -47,7 +47,7 @@ def test_stored_values_reconcile_to_duckdb(workbook, warehouse) -> None:
         r = HEADER_ROW + 1 + i
         assert ws[f"{header['Year']}{r}"].value == int(year)
         assert ws[f"{header['Claims']}{r}"].value == kpis["claims_total"][year]
-        assert ws[f"{header['Paid_amount']}{r}"].value == pytest.approx(kpis["payment_total"][year], abs=0.005)
+        assert ws[f"{header['Paid amount']}{r}"].value == pytest.approx(kpis["payment_total"][year], abs=0.005)
         assert ws[f"{header['Admissions']}{r}"].value == kpis["admissions"][year]
     monthly = workbook[1]["Monthly_Payments"]
     header = {c.value: c.column_letter for c in monthly[HEADER_ROW]}

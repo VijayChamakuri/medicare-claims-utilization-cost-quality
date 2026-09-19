@@ -15,6 +15,8 @@ from openpyxl import Workbook
 from openpyxl.formatting.rule import CellIsRule, FormulaRule
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.pagebreak import Break
+from openpyxl.worksheet.properties import PageSetupProperties
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -85,6 +87,40 @@ def _table(ws: Worksheet, frame: pd.DataFrame, name: str, formats: dict[str, str
     return first, last
 
 
+PRINT_TITLE = "Medicare Claims Utilization, Payment && Quality Analytics"  # && is a literal & in header codes
+
+
+def _print_setup(ws: Worksheet, refresh: str, one_page: bool = False) -> None:
+    """Landscape, one page wide, header row repeated, and a header/footer carrying the synthetic notice."""
+    ws.page_setup.orientation = "landscape"
+    ws.page_setup.paperSize = ws.PAPERSIZE_LETTER
+    ws.page_setup.fitToWidth = 2 if one_page else 1
+    ws.page_setup.fitToHeight = 1 if one_page else 0
+    ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    ws.page_margins.left = ws.page_margins.right = 0.4
+    ws.page_margins.top = ws.page_margins.bottom = 0.6
+    ws.print_options.horizontalCentered = True
+    if ws.max_row > HEADER_ROW:
+        ws.print_title_rows = f"{HEADER_ROW}:{HEADER_ROW}"
+    ws.print_area = f"A1:{get_column_letter(ws.max_column)}{ws.max_row}"
+    header, footer = ws.oddHeader, ws.oddFooter
+    assert header is not None and footer is not None
+    header.left.text, header.left.size = PRINT_TITLE, 9
+    header.right.text, header.right.size = ws.title.replace("_", " "), 9
+    footer.left.text, footer.left.size = BANNER, 8
+    footer.center.text, footer.center.size = refresh, 8
+    footer.right.text, footer.right.size = "Page &P of &N", 8
+
+
+def _wrap_row(ws: Worksheet, row: int, last_col: int, text: str, height: float, bold: bool = False) -> None:
+    ws.cell(row, 1, text)
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=last_col)
+    ws.cell(row, 1).alignment = Alignment(wrap_text=True, vertical="top")
+    if bold:
+        ws.cell(row, 1).font = Font(bold=True)
+    ws.row_dimensions[row].height = height
+
+
 def _executive(ws: Worksheet, ds: dict[str, pd.DataFrame], kpis: dict[str, Any], manifest_date: str) -> None:
     _banner(ws, "Executive summary", f"Data: {manifest_date}. Definitions: see Metric_Dictionary. Rates are formulas; the Pipeline columns hold the warehouse values they must equal.")
     ann = ds["kpi_annual"].copy()
@@ -95,12 +131,13 @@ def _executive(ws: Worksheet, ds: dict[str, pd.DataFrame], kpis: dict[str, Any],
         "Admissions": ann["admissions"], "ED proxy visits": ann["ed_proxy_visits"],
         "Readmission eligible index stays": ann["readmission_eligible_index"], "Readmission events": ann["readmission_events"],
         "Top 5% paid amount": ann["year"].map(conc["top_payment"]),
+        "Year (rates)": ann["year"],
         "Pipeline: admissions per 1,000": ann["admissions_per_1000_member_years"],
         "Pipeline: readmission proxy": ann["readmission_rate"],
         "Pipeline: top 5% share": ann["top_5pct_payment_share"],
     })
     frame.columns = ["Year", "Beneficiaries", "Member_years", "Claims", "Paid_amount", "Admissions", "ED_proxy_visits",
-                     "Readmission_eligible", "Readmission_events", "Top5_paid_amount", "Pipeline_admissions_per_1000",
+                     "Readmission_eligible", "Readmission_events", "Top5_paid_amount", "Year_(rates)", "Pipeline_admissions_per_1000",
                      "Pipeline_readmission_proxy", "Pipeline_top5_share"]
     formats = {"Member_years": RATE, "Paid_amount": MONEY, "Top5_paid_amount": MONEY, "Beneficiaries": INT, "Claims": INT,
                "Admissions": INT, "ED_proxy_visits": INT, "Readmission_eligible": INT, "Readmission_events": INT,
@@ -117,8 +154,14 @@ def _executive(ws: Worksheet, ds: dict[str, pd.DataFrame], kpis: dict[str, Any],
                              "ABS({c_Top5_payment_share}{r}-{c_Pipeline_top5_share}{r})<0.000001),\"OK\",\"CHECK\")"),
     }
     first, last = _table(ws, frame, "ExecutiveKpis", formats, formulas)
-    ws.conditional_formatting.add(f"A{first}:{get_column_letter(len(frame.columns) + len(formulas))}{last}",
-                                  FormulaRule(formula=[f'$R{first}="CHECK"'], fill=BAD_FILL))
+    width = len(frame.columns) + len(formulas)
+    check_col = get_column_letter(width)
+    ws.conditional_formatting.add(f"A{first}:{check_col}{last}",
+                                  FormulaRule(formula=[f'${check_col}{first}="CHECK"'], fill=BAD_FILL))
+    # Display labels with spaces so headers wrap at word boundaries when printed. Formulas use cell letters.
+    for col in range(1, width + 1):
+        cell = ws.cell(HEADER_ROW, col)
+        cell.value = str(cell.value).replace("Top5", "Top 5%").replace("top5", "top 5%").replace("_", " ")
     n = last + 3
     notes = [
         "What this workbook is: an operations review of CMS DE-SynPUF synthetic Medicare claims. It demonstrates a pipeline; it does not describe real Medicare.",
@@ -126,9 +169,18 @@ def _executive(ws: Worksheet, ds: dict[str, pd.DataFrame], kpis: dict[str, Any],
         "Utilization risk tier is a transparent descriptive stratification, not CMS-HCC or any official risk adjustment.",
         "The 30-day readmission proxy is measure-inspired, not a certified measure. 2010 volumes are lower in the source, so year-to-year trends are not interpretable.",
     ]
+    # Print as two landscape pages: page 1 holds the pipeline counts (A:J), page 2 the rates and checks.
+    page_one = list(frame.columns).index("Year_(rates)")
+    note = str(ws["A3"].value or "")
+    _wrap_row(ws, 3, page_one, note, 30)
     ws.cell(n, 1, "Limitations").font = Font(bold=True)
     for i, text in enumerate(notes, start=1):
-        ws.cell(n + i, 1, text)
+        _wrap_row(ws, n + i, page_one, text, 30)
+    for col in range(1, width + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 9 if col in (1, page_one + 1) else 14
+        ws.cell(HEADER_ROW, col).alignment = Alignment(wrap_text=True, vertical="center", horizontal="center")
+    ws.row_dimensions[HEADER_ROW].height = 48
+    ws.col_breaks.append(Break(id=page_one))
 
 
 def _monthly_utilization(ws: Worksheet, ds: dict[str, pd.DataFrame]) -> tuple[int, int]:
@@ -210,10 +262,13 @@ def _data_quality(ws: Worksheet, con: duckdb.DuckDBPyConnection) -> None:
 
 def _dictionary(ws: Worksheet, ds: dict[str, pd.DataFrame]) -> None:
     _banner(ws, "Metric dictionary", "Single source: config/metric_dictionary.yml.")
-    frame = ds["metric_dictionary"][["name", "category", "definition", "numerator", "denominator", "exclusions", "unit", "source_fields", "caveat"]]
-    frame.columns = ["Metric", "Category", "Definition", "Numerator", "Denominator", "Exclusions", "Unit", "Source_fields", "Caveat"]
+    cols = ["id", "version", "name", "owner_role", "description", "grain", "source_model", "calculation", "numerator",
+            "denominator", "exclusions", "unit", "known_limits"]
+    frame = ds["metric_dictionary"][cols]
+    frame.columns = ["Metric_ID", "Version", "Metric", "Owner_role", "Description", "Grain", "Source_model", "Calculation",
+                     "Numerator", "Denominator", "Exclusions", "Unit", "Known_limits"]
     _table(ws, frame, "MetricDictionary")
-    for col, width in zip("ABCDEFGHI", (30, 18, 70, 40, 30, 40, 24, 36, 60), strict=True):
+    for col, width in zip("ABCDEFGHIJKLM", (22, 9, 30, 22, 60, 18, 26, 44, 40, 30, 40, 24, 60), strict=True):
         ws.column_dimensions[col].width = width
     for row in ws.iter_rows(min_row=HEADER_ROW + 1):
         for cell in row:
@@ -256,6 +311,14 @@ def _reconciliation(ws: Worksheet, kpis: dict[str, Any], ranges: dict[str, tuple
     ws.cell(last + 2, 2, f'=IF(COUNTIF(F{first}:F{last},"FAIL")=0,"ALL CHECKS PASS","REVIEW")').font = Font(bold=True)
 
 
+def _retrieved_date(config: Config) -> str:
+    import json
+
+    manifest = json.loads((config.root / "data" / "data_manifest.json").read_text(encoding="utf-8"))
+    dates = sorted({str(f.get("retrieved_at", ""))[:10] for f in manifest.get("files", {}).values() if isinstance(f, dict)})
+    return dates[-1] if dates and dates[-1] else "see data/data_manifest.json"
+
+
 def build_workbook(con: duckdb.DuckDBPyConnection, config: Config, path: Path | None = None) -> Path:
     ds = datasets(con, config)
     kpis = compute_kpis(con)
@@ -275,6 +338,9 @@ def build_workbook(con: duckdb.DuckDBPyConnection, config: Config, path: Path | 
     _data_quality(sheets["Data_Quality"], con)
     _dictionary(sheets["Metric_Dictionary"], ds)
     _reconciliation(sheets["Reconciliation"], kpis, ranges)
+    refresh = "Fixture data" if config.is_fixture else f"Data retrieved {_retrieved_date(config)}"
+    for name, ws in sheets.items():
+        _print_setup(ws, refresh, one_page=name == "Executive_Summary")  # two pages wide, one tall
     target = path or config.artifacts_root / "excel" / "claims_operations_review.xlsx"
     target.parent.mkdir(parents=True, exist_ok=True)
     wb.save(target)
