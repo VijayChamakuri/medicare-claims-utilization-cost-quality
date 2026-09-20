@@ -50,7 +50,7 @@ flowchart TD
 | Stage and deduplicate | `sql/01_staging.sql`, `sql/01b_staging_unpivot.sql` | `tests/test_claim_grain.py::test_exact_duplicate_rows_are_dropped_once` |
 | Merge claim segments | `sql/03_claim_facts.sql` | `tests/test_claim_grain.py::test_header_has_one_row_per_claim_and_segments_are_merged` |
 | Continuous inpatient stays | `sql/03_claim_facts.sql` | `tests/test_claim_grain.py::test_transfer_claims_continue_one_stay` |
-| Member months | `sql/04_utilization_mart.sql` | `tests/test_fixture_kpis.py::test_member_month_eligibility` |
+| Member months | `sql/04_utilization_mart.sql` | `tests/test_claim_grain.py::test_member_month_eligibility` |
 | Quality proxies | `sql/06_quality_mart.sql` | `tests/test_fixture_kpis.py::test_readmission_proxy_index_and_exclusion_logic` |
 | Provider review flags | `sql/07_provider_mart.sql` | `tests/test_fixture_kpis.py::test_provider_review_flags_use_peer_quartiles` |
 | Blocking reconciliation | `sql/08_reconciliation.sql`, `src/medicare_claims/model.py` | `tests/test_reconciliation.py::test_blocking_checks_pass_on_the_fixture` |
