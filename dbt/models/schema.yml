@@ -1,0 +1,236 @@
+# Grain and key tests for every warehouse model. Grains match docs/table_inventory.md.
+version: 2
+models:
+- name: dim_beneficiary
+  description: One row per synthetic beneficiary.
+  columns:
+  - name: beneficiary_id
+    data_tests:
+    - unique
+    - not_null
+- name: dim_date
+  description: One row per calendar day.
+  columns:
+  - name: date_key
+    data_tests:
+    - unique
+    - not_null
+- name: dim_provider
+  description: One row per provider ID and type.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - provider_type
+        - provider_id
+  columns:
+  - name: provider_key
+    data_tests:
+    - unique
+    - not_null
+- name: dim_diagnosis
+  description: One row per normalized ICD-9-CM code seen on a claim.
+  columns:
+  - name: diagnosis_code
+    data_tests:
+    - unique
+    - not_null
+- name: dim_procedure
+  description: One row per normalized HCPCS code seen on a claim.
+  columns:
+  - name: procedure_code
+    data_tests:
+    - unique
+    - not_null
+- name: dim_care_setting
+  description: One row per care setting.
+  columns:
+  - name: care_setting
+    data_tests:
+    - unique
+    - not_null
+    - accepted_values:
+        arguments:
+          values: &id001
+          - inpatient
+          - outpatient
+          - carrier
+- name: fact_claim_header
+  description: One row per claim (beneficiary + CLM_ID within a setting, segments
+    merged).
+  columns:
+  - name: claim_key
+    data_tests:
+    - unique
+    - not_null
+  - name: beneficiary_id
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('dim_beneficiary')
+          field: beneficiary_id
+  - name: setting
+    data_tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values: *id001
+- name: fact_claim_line
+  description: One row per carrier line, or per institutional HCPCS position.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - claim_key
+        - line_num
+  columns:
+  - name: claim_key
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('fact_claim_header')
+          field: claim_key
+- name: fact_claim_diagnosis
+  description: One row per claim and distinct diagnosis code.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - claim_key
+        - diagnosis_code
+- name: fact_inpatient_stay
+  description: One row per continuous inpatient stay.
+  columns:
+  - name: stay_key
+    data_tests:
+    - unique
+    - not_null
+- name: fact_beneficiary_year
+  description: One row per beneficiary and year.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - beneficiary_id
+        - year
+- name: mart_member_month
+  description: One row per beneficiary, year and month.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - beneficiary_id
+        - year
+        - month
+- name: mart_utilization_monthly
+  description: One row per month and care setting.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - month_start
+        - setting
+- name: mart_utilization_annual
+  description: One row per year and care setting.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - year
+        - setting
+- name: mart_payment_monthly
+  description: One row per month, setting and CMS payment field.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - month_start
+        - setting
+- name: mart_payment_annual
+  description: One row per year, setting and CMS payment field.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - year
+        - setting
+- name: mart_beneficiary_year_summary
+  description: One row per beneficiary and year.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - beneficiary_id
+        - year
+- name: mart_payment_concentration
+  description: One row per year.
+  columns:
+  - name: year
+    data_tests:
+    - unique
+    - not_null
+- name: mart_demographic_summary
+  description: One row per year, sex, race and age band.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - year
+        - sex
+        - race
+        - age_band
+- name: mart_member_risk
+  description: One row per beneficiary and year.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - beneficiary_id
+        - year
+- name: mart_readmission_index
+  description: One row per inpatient stay considered as an index.
+  columns:
+  - name: stay_key
+    data_tests:
+    - unique
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('fact_inpatient_stay')
+          field: stay_key
+- name: mart_quality_monitoring
+  description: One row per discharge year and risk tier.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - year
+        - utilization_risk_tier
+- name: mart_condition_summary
+  description: One row per condition, year and setting.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - condition_type
+        - year
+        - setting
+        - condition_id
+- name: mart_provider_performance
+  description: One row per provider, provider type and year.
+  data_tests:
+  - unique_combination:
+      arguments:
+        columns:
+        - provider_type
+        - provider_id
+        - year
+- name: reconciliation_results
+  description: One row per reconciliation check (ported from sql/08_reconciliation.sql).
+  columns:
+  - name: check_name
+    data_tests:
+    - unique
+    - not_null

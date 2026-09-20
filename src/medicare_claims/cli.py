@@ -64,7 +64,14 @@ def _export(config: Config, args: argparse.Namespace) -> None:
 def _excel(config: Config, args: argparse.Namespace) -> None:
     from medicare_claims.excel import build_workbook
 
-    print(build_workbook(_connect(config), config))
+    path = build_workbook(_connect(config), config)
+    print(path)
+    from medicare_claims.pdf_export import export_executive_pdf, soffice
+
+    if soffice() is None:
+        print("LibreOffice not found: executive PDF not exported")
+        return
+    print(export_executive_pdf(path, config.reports_dir / "claims_executive_summary.pdf"))
 
 
 def _reports(config: Config, args: argparse.Namespace) -> None:
@@ -100,9 +107,27 @@ def _readme(config: Config, args: argparse.Namespace) -> None:
         print("README generated blocks refreshed")
 
 
+def _dbt(config: Config, args: argparse.Namespace) -> None:
+    from medicare_claims.dbt_layer import run_dbt, write_equivalence
+
+    result = run_dbt(config, "build")
+    tail = [line for line in result.stdout.splitlines() if "Done." in line or "ERROR" in line or "FAIL" in line]
+    print("\n".join(tail[-15:]))
+    if result.returncode != 0:
+        print(result.stdout[-4000:], result.stderr[-2000:])
+        raise SystemExit(1)
+    models, kpis = write_equivalence(config)
+    print(f"{int(models['passed'].sum())} of {len(models)} dbt models match the legacy tables row for row; "
+          f"{int(kpis['passed'].sum())} of {len(kpis)} headline KPIs match")
+    if not (models["passed"].all() and kpis["passed"].all()):
+        print(models[~models["passed"]].to_string(index=False))
+        raise SystemExit(1)
+
+
 def _all(config: Config, args: argparse.Namespace) -> None:
     _download(config, argparse.Namespace(refresh_manifest=False, force=False))
     _build(config, args)
+    _dbt(config, args)
     _validate(config, args)
     _export(config, args)
     _excel(config, args)
@@ -122,6 +147,7 @@ COMMANDS: dict[str, tuple[str, Callable[[Config, argparse.Namespace], None]]] = 
     "tableau": ("Write the Tableau data extracts and documentation", _tableau),
     "dashboard": ("Build the offline dashboard", _dashboard),
     "readme": ("Refresh or check the README generated blocks", _readme),
+    "dbt": ("Run dbt build on the warehouse and check it matches the legacy SQL row for row", _dbt),
     "all": ("Run every stage in order", _all),
 }
 

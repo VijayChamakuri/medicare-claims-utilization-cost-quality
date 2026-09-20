@@ -100,25 +100,40 @@ def executive_summary(h: dict[str, Any]) -> str:
     lines = [
         "# Executive summary: Medicare claims utilization, payment and quality monitoring", "",
         f"> **{BANNER}** A pipeline demonstration on CMS DE-SynPUF synthetic data. Nothing here estimates real Medicare rates, provider performance, savings or prevalence.", "",
-        "**For:** a population-health or payer-operations leader deciding where to point a first review.", "",
-        "## Three computed observations", "",
+        "**Audiences:** a payer or provider operations leader (trend, concentration, review queue), a quality analyst "
+        "(proxy logic, cohorts, exclusions) and the data owner (completeness, reconciliation, failed checks).", "",
+        "## 1. What stands out", "",
         *[f"{i}. {text}" for i, text in enumerate(obs, start=1)], "",
-        "## What this would mean operationally", "",
-        "- **Concentrated payment** is where a utilization-management or care-management team would look first: a small share of beneficiaries and mostly inpatient stays.",
-        "- **The tier** is a transparent starting list, not a risk model. It uses only prior-year chronic condition flags, admissions and paid amount, and it can be recomputed and challenged by any analyst.",
-        "- **Provider review flags** (see `provider_action_list.csv`) are prompts to look at peers with unusual payment per claim or volume. They are not findings about quality or conduct.", "",
-        "## Recommended follow-up analysis", "",
-        "1. Break the concentrated payment down by primary diagnosis category (AHRQ CCS) to see which conditions the top beneficiaries share.",
-        "2. Test whether the readmission proxy and tier hold their shape on a real, governed dataset with discharge status and planned-readmission flags.",
-        "3. Review flagged providers against peers of the same type before any conclusion.", "",
-        "## Limits", "",
+        "## 2. What action should be considered", "",
+        "- **Operations leader:** point a first utilization or care-management review at the small group of beneficiaries "
+        "that holds most of the paid amount, and at inpatient stays, which carry about half of it.",
+        "- **Operations leader:** work the provider review queue (`provider_action_list.csv`, Tableau Provider Operations) "
+        "against same-type peers. A flag is a prompt to look, not a finding about quality or conduct.",
+        "- **Quality analyst:** treat the readmission proxy and the utilization risk tier as starting lists to validate, "
+        "not as measures to report.",
+        "- **Data owner:** keep the blocking reconciliation gate and the dbt tests as release criteria for any refresh.", "",
+        "## 3. What evidence supports it", "",
+        "- Every number above is generated from the DuckDB marts and tied out three ways: blocking SQL reconciliation, an "
+        "independent pandas recomputation from the raw files, and a dbt build that matches the legacy tables row for row.",
+        "- The Excel review and the Tableau workbook tie their KPI values back to the same marts "
+        "(`excel/claims_operations_review.xlsx` Reconciliation sheet, `tableau/validation_evidence.csv`).",
+        "- Definitions, grains and quality checks for each KPI: [metric dictionary](../docs/metric_dictionary.md).", "",
+        "## 4. What cannot be concluded from synthetic DE-SynPUF", "",
         f"- Synthetic data. {_readmission_sentence(rd, h['years'])}",
+        "- No real Medicare rate, provider performance, prevalence or trend. Monthly volume tapers in the source from mid-2009.",
+        "- The ED measure and the readmission measure are proxies: there is no revenue center, place of service, discharge "
+        "status or planned-readmission flag. They are not HEDIS measures, and the risk tier is not CMS-HCC.",
         "- Inpatient, outpatient and carrier claims only. Prescription drug events are not loaded.",
         "- No savings, impact or outcome is claimed or estimated.", "",
+        "## 5. What must be validated on real, governed data before any action", "",
+        "1. Rebuild the same metrics on a governed claims extract and confirm the concentration and inpatient share hold.",
+        "2. Replace the readmission and ED proxies with discharge-status, planned-readmission and revenue-center logic, "
+        "and compare with any certified measure the organization reports.",
+        "3. Calibrate provider review thresholds with clinical and payment-integrity reviewers before any flag is acted on.",
+        "4. Confirm access controls, minimum-necessary fields and small-cell suppression (see the privacy and governance note).", "",
         "Definitions: [metric dictionary](../docs/metric_dictionary.md). Data quality: [data quality report](data_quality_report.md).", "",
     ]
     return "\n".join(lines)
-
 
 def data_quality_report(con: duckdb.DuckDBPyConnection, config: Config, independent: pd.DataFrame | None) -> str:
     q = all_quality(con)
@@ -198,14 +213,33 @@ def table_inventory(con: duckdb.DuckDBPyConnection, config: Config) -> str:
 def metric_dictionary_doc(config: Config) -> str:
     from medicare_claims.export import metric_dictionary
 
+    frame = metric_dictionary(config)
     lines = ["# Metric dictionary", "", f"> {BANNER}", "",
-             "Generated from `config/metric_dictionary.yml`, the single source for this page, the Excel `Metric_Dictionary` sheet and the Tableau notes. Payment fields keep their CMS names and are never called \"cost\".", ""]
-    for r in metric_dictionary(config).itertuples():
-        lines += [f"## {r.name}", "", f"*Category:* {r.category}. *Unit:* {r.unit}.", "", r.definition, "",
-                  f"- **Numerator:** {r.numerator}", f"- **Denominator:** {r.denominator}", f"- **Exclusions:** {r.exclusions}",
-                  f"- **Source fields:** {r.source_fields}", f"- **Caveat:** {r.caveat}", ""]
+             f"Generated from `config/metric_dictionary.yml` (contract version {int(frame['contract_version'].iloc[0])}), the single "
+             "source for this page, the Excel `Metric_Dictionary` sheet, the Tableau field dictionary and "
+             "`tableau/expected_kpis.csv`. Change rules: [metric governance](metric_governance.md).", ""]
+    for r in frame.itertuples():
+        lines += [f"## {r.name}", "",
+                  f"- **ID and version:** `{r.id}` v{r.version}" + (" (headline KPI)" if r.headline else ""),
+                  f"- **Business question:** {r.business_question}",
+                  f"- **Owner role:** {r.owner_role}",
+                  f"- **Description:** {r.description}",
+                  f"- **Grain:** {r.grain}",
+                  f"- **Source model:** `{r.source_model}`",
+                  f"- **Calculation:** {r.calculation}",
+                  f"- **Numerator:** {r.numerator}",
+                  f"- **Denominator:** {r.denominator}",
+                  f"- **Inclusions:** {r.inclusions}",
+                  f"- **Exclusions:** {r.exclusions}",
+                  f"- **Valid dimensions:** {r.valid_dimensions}",
+                  f"- **Time basis:** {r.time_basis}",
+                  f"- **Refresh expectation:** {r.refresh_expectation}",
+                  f"- **Quality checks:** {r.quality_checks}",
+                  f"- **Unit:** {r.unit}",
+                  f"- **Source fields:** {r.source_fields}",
+                  f"- **Known limits:** {r.known_limits}",
+                  f"- **Tableau field:** `{r.tableau_field}`", ""]
     return "\n".join(lines)
-
 
 def write_reports(con: duckdb.DuckDBPyConnection, config: Config, run_independent: bool = True) -> dict[str, Any]:
     out_dir = config.reports_dir

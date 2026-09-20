@@ -1,0 +1,46 @@
+year,condition_id,condition_name,claims,payment_amount,paid_rank
+2008,158,Chronic kidney disease,36699.0,21366970.0,1
+2008,101,Coronary atherosclerosis and other heart disease,44128.0,17865300.0,2
+2008,2,Septicemia (except in labor),4250.0,16741090.0,3
+2008,203,Osteoarthritis,32714.0,14054700.0,4
+2008,205,Spondylosis; intervertebral disc disorders; other back problems,74305.0,13776920.0,5
+2008,108,Congestive heart failure; nonhypertensive,23341.0,12681980.0,6
+2008,254,Rehabilitation care; fitting of prostheses; and adjustment of devices,6980.0,12180770.0,7
+2008,237,Complication of device; implant or graft,7194.0,11479550.0,8
+2008,122,Pneumonia (except that caused by tuberculosis or sexually transmitted disease),15435.0,11179050.0,9
+2008,131,Respiratory failure; insufficiency; arrest (adult),8484.0,10916160.0,10
+2008,106,Cardiac dysrhythmias,63511.0,10773070.0,11
+2008,100,Acute myocardial infarction,4236.0,9913130.0,12
+2008,109,Acute cerebrovascular disease,12079.0,7938020.0,13
+2008,127,Chronic obstructive pulmonary disease and bronchiectasis,26567.0,7628580.0,14
+2008,86,Cataract,37116.0,7285750.0,15
+2009,158,Chronic kidney disease,38790.0,23434710.0,1
+2009,101,Coronary atherosclerosis and other heart disease,46821.0,18141070.0,2
+2009,205,Spondylosis; intervertebral disc disorders; other back problems,81891.0,15138170.0,3
+2009,2,Septicemia (except in labor),5131.0,14705540.0,4
+2009,203,Osteoarthritis,35707.0,14157950.0,5
+2009,254,Rehabilitation care; fitting of prostheses; and adjustment of devices,9055.0,13545850.0,6
+2009,108,Congestive heart failure; nonhypertensive,27683.0,12991660.0,7
+2009,106,Cardiac dysrhythmias,72722.0,12366190.0,8
+2009,237,Complication of device; implant or graft,7891.0,12065760.0,9
+2009,122,Pneumonia (except that caused by tuberculosis or sexually transmitted disease),17775.0,10655430.0,10
+2009,131,Respiratory failure; insufficiency; arrest (adult),11297.0,9212410.0,11
+2009,100,Acute myocardial infarction,4780.0,8496550.0,12
+2009,109,Acute cerebrovascular disease,14454.0,7809410.0,13
+2009,127,Chronic obstructive pulmonary disease and bronchiectasis,29043.0,7552320.0,14
+2009,86,Cataract,36596.0,7352750.0,15
+2010,158,Chronic kidney disease,21196.0,12702510.0,1
+2010,101,Coronary atherosclerosis and other heart disease,28371.0,9330450.0,2
+2010,205,Spondylosis; intervertebral disc disorders; other back problems,50286.0,9324450.0,3
+2010,203,Osteoarthritis,21957.0,9097190.0,4
+2010,2,Septicemia (except in labor),2813.0,8348480.0,5
+2010,254,Rehabilitation care; fitting of prostheses; and adjustment of devices,4918.0,7243840.0,6
+2010,106,Cardiac dysrhythmias,44952.0,7107850.0,7
+2010,237,Complication of device; implant or graft,4555.0,6680150.0,8
+2010,108,Congestive heart failure; nonhypertensive,16512.0,6603050.0,9
+2010,100,Acute myocardial infarction,2588.0,5382950.0,10
+2010,122,Pneumonia (except that caused by tuberculosis or sexually transmitted disease),9972.0,5089180.0,11
+2010,131,Respiratory failure; insufficiency; arrest (adult),6361.0,4686690.0,12
+2010,86,Cataract,22547.0,4519330.0,13
+2010,127,Chronic obstructive pulmonary disease and bronchiectasis,17535.0,4461150.0,14
+2010,102,Nonspecific chest pain,22931.0,4120310.0,15

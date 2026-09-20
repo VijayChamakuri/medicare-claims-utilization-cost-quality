@@ -1,0 +1,29 @@
+year,utilization_risk_tier,stay_measure,stays
+2008,not_assessed,1 Eligible index stays (denominator),25861
+2009,high,1 Eligible index stays (denominator),10737
+2009,low,1 Eligible index stays (denominator),4958
+2009,medium,1 Eligible index stays (denominator),9068
+2010,high,1 Eligible index stays (denominator),4942
+2010,low,1 Eligible index stays (denominator),2695
+2010,medium,1 Eligible index stays (denominator),5784
+2008,not_assessed,2 Readmitted within 30 days (numerator),3906
+2009,high,2 Readmitted within 30 days (numerator),1108
+2009,low,2 Readmitted within 30 days (numerator),202
+2009,medium,2 Readmitted within 30 days (numerator),556
+2010,high,2 Readmitted within 30 days (numerator),304
+2010,low,2 Readmitted within 30 days (numerator),58
+2010,medium,2 Readmitted within 30 days (numerator),215
+2008,not_assessed,3 Excluded: died in stay,1
+2009,high,3 Excluded: died in stay,2
+2009,low,3 Excluded: died in stay,0
+2009,medium,3 Excluded: died in stay,0
+2010,high,3 Excluded: died in stay,0
+2010,low,3 Excluded: died in stay,1
+2010,medium,3 Excluded: died in stay,0
+2008,not_assessed,4 Excluded: follow-up under 30 days,0
+2009,high,4 Excluded: follow-up under 30 days,0
+2009,low,4 Excluded: follow-up under 30 days,0
+2009,medium,4 Excluded: follow-up under 30 days,0
+2010,high,4 Excluded: follow-up under 30 days,194
+2010,low,4 Excluded: follow-up under 30 days,31
+2010,medium,4 Excluded: follow-up under 30 days,85

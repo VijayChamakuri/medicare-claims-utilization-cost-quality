@@ -53,9 +53,9 @@ def test_exports_are_aggregates_only_and_match_hand_values(project) -> None:
 def test_tableau_expected_kpis_match_the_hand_derivation(project) -> None:
     root, _ = project
     exp = pd.read_csv(root / "build" / "fixture" / "tableau" / "expected_kpis.csv")
-    got = exp[(exp.year == 2009) & (exp.metric == "payment_total")]["expected_value"].iloc[0]
+    got = exp[(exp.year == 2009) & (exp.field == "payment_total")]["expected_value"].iloc[0]
     assert got == pytest.approx(81385.0)
-    assert set(exp.metric) >= {"claims", "readmission_rate", "top_5pct_payment_share"}
+    assert set(exp.field) >= {"claims", "readmission_rate", "top_5pct_payment_share"}
 
 
 def test_executive_summary_states_the_synthetic_caveat_and_no_savings(project) -> None:

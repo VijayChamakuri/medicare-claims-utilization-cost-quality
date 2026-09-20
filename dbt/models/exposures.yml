@@ -1,0 +1,43 @@
+version: 2
+
+exposures:
+  - name: tableau_medicare_claims_bi
+    label: Tableau workbook, Medicare Claims Utilization, Payment & Quality Analytics
+    type: dashboard
+    maturity: medium
+    description: Five-dashboard Tableau workbook built from the aggregated extracts in tableau/data (tableau/workbook/medicare_claims_bi.twbx). Synthetic CMS data.
+    owner: {name: Vijay Chamakuri}
+    depends_on:
+      - ref('mart_utilization_monthly')
+      - ref('mart_payment_monthly')
+      - ref('mart_utilization_annual')
+      - ref('mart_payment_annual')
+      - ref('mart_payment_concentration')
+      - ref('mart_demographic_summary')
+      - ref('mart_quality_monitoring')
+      - ref('mart_condition_summary')
+      - ref('mart_provider_performance')
+      - ref('reconciliation_results')
+  - name: excel_claims_operations_review
+    label: Excel claims operations review
+    type: analysis
+    maturity: medium
+    description: Nine-sheet workbook with live formulas and a reconciliation sheet (excel/claims_operations_review.xlsx).
+    owner: {name: Vijay Chamakuri}
+    depends_on:
+      - ref('mart_utilization_monthly')
+      - ref('mart_payment_monthly')
+      - ref('mart_provider_performance')
+      - ref('mart_quality_monitoring')
+      - ref('mart_member_risk')
+      - ref('reconciliation_results')
+  - name: executive_summary
+    label: Executive summary
+    type: analysis
+    maturity: medium
+    description: Generated stakeholder summary (reports/executive_summary.md).
+    owner: {name: Vijay Chamakuri}
+    depends_on:
+      - ref('mart_payment_concentration')
+      - ref('mart_payment_annual')
+      - ref('mart_quality_monitoring')

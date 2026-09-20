@@ -67,7 +67,10 @@ group by r.discharge_year, coalesce(m.utilization_risk_tier, 'not_assessed');
 
 create or replace table mart_condition_summary as
 select 'primary_diagnosis_ccs' as condition_type, h.claim_year as year, h.setting,
-       coalesce(d.ccs_category::varchar, 'unmapped') as condition_id,
+       case when h.primary_dx is null then 'missing'
+            when d.ccs_category is not null then d.ccs_category::varchar
+            when h.primary_dx_valid then 'unmapped_valid'
+            else 'invalid_format' end as condition_id,
        case when h.primary_dx is null then 'Missing primary diagnosis'
             when d.ccs_category is not null then d.ccs_category_name
             when h.primary_dx_valid then 'Unmapped (valid format, not in CCS 2015)'

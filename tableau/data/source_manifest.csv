@@ -1,0 +1,11 @@
+file,kind,bytes,retrieved_at,sha256
+DE1_0_2008_to_2010_Carrier_Claims_Sample_1A.zip,carrier,113217928,2026-09-19,4b4038b5f6cd
+DE1_0_2008_to_2010_Carrier_Claims_Sample_1B.zip,carrier,113267827,2026-09-19,99149d9d40e3
+ccs_single_level_2015.zip,reference,205587,2026-09-19,a1e31709cc4f
+de-10-codebook.pdf,document,820871,2026-09-19,3d81fa7a1d9b
+de-10-faq.pdf,document,150563,2026-09-19,d44fbcb8b674
+de1_0_2008_beneficiary_summary_file_sample_1.zip,beneficiary,3119160,2026-09-19,2b0c9cbfb07a
+de1_0_2008_to_2010_inpatient_claims_sample_1.zip,inpatient,4162147,2026-09-19,ac25124184d2
+de1_0_2008_to_2010_outpatient_claims_sample_1.zip,outpatient,34456300,2026-09-19,7c94a94c8c67
+de1_0_2009_beneficiary_summary_file_sample_1.zip,beneficiary,3177446,2026-09-19,dff1853368d8
+de1_0_2010_beneficiary_summary_file_sample_20.zip,beneficiary,2960588,2026-09-19,b28b8ac7ecc2

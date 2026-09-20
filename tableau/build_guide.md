@@ -1,27 +1,15 @@
-# Build guide: five pages
+# Build guide
 
-Banner on every page: `CMS synthetic claims - not real patient or provider performance.` (a text object pinned at the top).
+The workbook is not built by hand. `uv run python -m medicare_claims tableau` (part of `make all`):
 
-Global filters: **Year**, **Care setting**, **Condition** (`condition_name`), **Demographic** (`sex`, `race`, `age_band`). Apply year and setting to all worksheets that carry those fields.
+1. Builds the governed extracts from the DuckDB marts (`src/medicare_claims/tableau.py`, `extracts`) and rejects any extract with a beneficiary or claim identifier.
+2. Writes the workbook XML from the specification in `build_workbook`: 15 data sources, one Year parameter, 31 worksheets, five dashboards at 1366 x 768 and one filter action.
+3. Builds one Hyper extract per data source with the Tableau Hyper API and packages them with the workbook as `workbook/medicare_claims_bi.twbx`.
+4. Writes `workbook_manifest.yml`, `calculated_fields.md`, `field_dictionary.md` and `expected_kpis.csv`.
+5. Reopens the packaged kpi_annual Hyper extract and ties every expected KPI to it (`validation_evidence.csv`).
 
-| Page | Data | Worksheets |
-|---|---|---|
-| 1. Executive Overview | `kpi_annual`, `monthly_payments`, `monthly_utilization` | Seven KPI tiles for the selected year (beneficiaries, claims, paid amount, paid per beneficiary, admissions per 1,000, readmission proxy, top 5% share); monthly paid amount stacked by setting; monthly claims per 1,000 members line |
-| 2. Utilization & Payment | `annual_by_setting`, `condition_summary`, `demographic_summary` | Setting mix (share of claims versus share of paid amount); top 15 conditions by paid amount; demographic table; year filter |
-| 3. Provider Operations | `provider_review_facility` | Scatter of `claims` (log axis) versus `payment_per_claim`, colored by the parameterized review flag; top N list; provider drill-through (dashboard action from the list or scatter to a per-year table) |
-| 4. Quality & Cohorts | `readmission_review`, `risk_tier_summary`, `payment_concentration` | Readmission proxy by tier with numerator, denominator and exclusions; tier table; concentration table |
-| 5. Data Quality & Definitions | `field_dictionary.md`, `reconciliation_results` (from `../exports`) | Source, refresh date, reconciliation status, definitions, synthetic banner |
+To change a view, edit `build_workbook` and rerun; do not edit the `.twbx` in Tableau and commit it, because the next run overwrites it.
 
-## Actions
+## Opening and checking
 
-- Provider list to scatter: highlight action on `provider_id`.
-- Provider list to per-year table: filter action on `provider_id` (drill-through).
-- Condition table to demographic table: filter action on `condition_name`.
-
-## Tooltips
-
-Every rate tooltip states the numerator, the denominator and one caveat (see `calculated_fields.md`).
-
-## Colors
-
-Use a color-blind-safe palette (for example blue, orange, green for the three settings) and never rely on color alone: flagged providers also use a larger mark and a text label.
+Open the `.twbx` in Tableau Public 2026.2.2 or later (File > Open). The load was checked by launching Tableau with the file and reading Tableau's own log for schema or load errors (none). Then follow `qa_checklist.md`.

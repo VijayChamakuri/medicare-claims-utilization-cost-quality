@@ -22,7 +22,14 @@ BANNER = "CMS synthetic claims - not real patient or provider performance."
 def metric_dictionary(config: Config) -> pd.DataFrame:
     path = config.root / "config" / "metric_dictionary.yml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    return pd.DataFrame(data["metrics"])
+    frame = pd.DataFrame(data["metrics"])
+    frame["contract_version"] = int(data["contract_version"])
+    # Short aliases kept for the dashboard's definitions page and the Excel sheet.
+    frame["definition"] = frame["description"]
+    frame["caveat"] = frame["known_limits"]
+    for column in ("valid_dimensions", "quality_checks"):
+        frame[column] = frame[column].map(lambda v: ", ".join(v) if isinstance(v, list) else v)
+    return frame
 
 
 def kpi_annual(kpis: dict[str, Any]) -> pd.DataFrame:
