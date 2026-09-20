@@ -12,6 +12,8 @@ Where are utilization and paid-amount patterns concentrated across synthetic ben
 
 This is an analytics and BI project, not a modeling contest. It turns synthetic Medicare inpatient, outpatient and carrier claims into a tested SQL star schema with a dbt layer, a governed KPI contract, a formula-driven Excel operations workbook, a generated Tableau workbook and an offline HTML dashboard. Payment fields keep their CMS names (`CLM_PMT_AMT`, `LINE_NCH_PMT_AMT`); they are Medicare trust fund payments, not costs or charges.
 
+**Open first:** [Tableau Public](https://public.tableau.com/app/profile/vijay.chamakuri/viz/MedicareClaimsUtilizationPaymentQualityAnalyticsCMSDE-SynPUF/ExecutiveOverview) · [Executive summary PDF](reports/claims_executive_summary.pdf) · [Metric dictionary](docs/metric_dictionary.md) · [Data limitations](docs/limitations.md)
+
 **Tableau Public:** [vijay.chamakuri / Medicare Claims Utilization, Payment & Quality Analytics](https://public.tableau.com/app/profile/vijay.chamakuri/viz/MedicareClaimsUtilizationPaymentQualityAnalyticsCMSDE-SynPUF/ExecutiveOverview) (five dashboards).
 
 ![Executive Overview dashboard in Tableau with KPI tiles, monthly paid amount by setting and claims per 1,000 members](tableau/screenshots/01_executive_overview.png)
