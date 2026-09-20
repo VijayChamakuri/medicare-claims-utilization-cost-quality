@@ -36,6 +36,12 @@ data_sources:
 - name: Readmission proxy
   extract: Data/Extracts/readmission_review.hyper
   csv: tableau/data/readmission_review.csv
+- name: Readmission counts
+  extract: Data/Extracts/readmission_counts.hyper
+  csv: tableau/data/readmission_counts.csv
+- name: Paid per unit
+  extract: Data/Extracts/paid_per_unit.hyper
+  csv: tableau/data/paid_per_unit.csv
 - name: Top conditions
   extract: Data/Extracts/condition_top.hyper
   csv: tableau/data/condition_top.csv
@@ -62,9 +68,7 @@ worksheets:
 - KPI ED proxy per 1,000 member-years
 - KPI Readmission proxy rate
 - KPI Top 5% payment share
-- KPI Paid per beneficiary
-- KPI Paid per claim
-- KPI Paid per admission
+- Paid per beneficiary, claim and admission
 - Monthly paid by setting
 - Monthly claims per 1,000 members
 - Paid by setting
@@ -73,7 +77,6 @@ worksheets:
 - Risk tier paid per beneficiary
 - Payment concentration curve
 - Provider volume vs paid per claim
-- Review flags by reason
 - Provider action queue
 - Readmission proxy by tier
 - Readmission numerator and denominator
@@ -99,9 +102,7 @@ dashboards:
   - Monthly claims per 1,000 members
 - name: Utilization & Payment
   worksheets:
-  - KPI Paid per beneficiary
-  - KPI Paid per claim
-  - KPI Paid per admission
+  - Paid per beneficiary, claim and admission
   - Paid by setting
   - Paid per claim by setting
   - Payment concentration curve
@@ -110,7 +111,6 @@ dashboards:
 - name: Provider Operations
   worksheets:
   - Provider volume vs paid per claim
-  - Review flags by reason
   - Provider action queue
 - name: Quality & Cohorts
   worksheets:

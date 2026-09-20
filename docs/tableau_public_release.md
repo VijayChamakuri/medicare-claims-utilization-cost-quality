@@ -2,7 +2,7 @@
 
 > CMS synthetic claims - not real patient or provider performance.
 
-Status: **Tableau package prepared; workbook generated and load-checked in Tableau Public 2026.2.2; visual QA and publication not yet verified.** Until the steps below are complete, no document may call this a published Tableau dashboard.
+Status: **published 2026-09-19** at https://public.tableau.com/app/profile/vijay.chamakuri/viz/MedicareClaimsUtilizationPaymentQualityAnalyticsCMSDE-SynPUF/ExecutiveOverview. Repeat these steps for every refresh.
 
 ## Release steps (manual, Vijay)
 

@@ -2,7 +2,9 @@
 
 > CMS synthetic claims - not real patient or provider performance.
 
-**Status: Tableau package prepared; workbook generated and load-checked in Tableau Public 2026.2.2; visual QA and Tableau Public publication not yet verified.** Tableau Public URL: _not yet published_. Until the URL below is filled in and the QA checklist is complete, this is not a published Tableau dashboard.
+**Status: published and checked.** Tableau Public URL: https://public.tableau.com/app/profile/vijay.chamakuri/viz/MedicareClaimsUtilizationPaymentQualityAnalyticsCMSDE-SynPUF/ExecutiveOverview
+
+The workbook opens in Tableau Public 2026.2.2 with no errors, all five dashboards were inspected at 1366 x 768, every KPI tile ties to `expected_kpis.csv`, and screenshots from Tableau are in `screenshots/`. QA record: `qa_checklist.md`.
 
 | File | Purpose |
 |---|---|

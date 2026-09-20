@@ -73,11 +73,12 @@ CAPTIONS: dict[str, tuple[str, str | None]] = {
     "cumulative_payment_share": ("Cumulative share of paid amount", PCT),
     "check_name": ("Check", None), "category": ("Category", None), "passed": ("Passed", None),
     "blocking": ("Blocking", None), "difference": ("Difference", "n#,##0.00"),
-    "value": ("Value", "n#,##0.00"), "measure": ("Data-quality measure", None),
+    "value": ("Value", "n#,##0"), "measure": ("Data-quality measure", None),
     "file": ("Source file", None), "retrieved_at": ("Retrieved", None), "bytes": ("Bytes", NUM),
     "name": ("Metric", None), "description": ("Definition", None), "owner_role": ("Owner", None),
     "numerator": ("Numerator", None), "denominator": ("Denominator", None), "known_limits": ("Known limits", None),
-    "ed_proxy_visits": ("ED proxy visits", NUM),
+    "ed_proxy_visits": ("ED proxy visits", NUM), "age_band": ("Age band", None), "race": ("Race", None),
+    "sex": ("Sex", None), "paid_measure": ("Measure", None), "paid_value": ("Paid", MONEY), "stay_measure": ("Measure", None), "stays": ("Stays", NUM),
 }
 
 
@@ -143,6 +144,16 @@ def extracts(con: duckdb.DuckDBPyConnection, config: Config) -> dict[str, pd.Dat
         else:
             rows.append({"measure": measure.replace("_", " "), "setting": "all", "value": float(value)})
     out["data_quality_summary"] = pd.DataFrame(rows)
+    readm = ds["readmission_review"]
+    labels = {"eligible_index_stays": "1 Eligible index stays (denominator)", "readmitted_stays": "2 Readmitted within 30 days (numerator)",
+              "excluded_died_in_stay": "3 Excluded: died in stay", "excluded_insufficient_followup": "4 Excluded: follow-up under 30 days"}
+    long = readm.melt(id_vars=["year", "utilization_risk_tier"], value_vars=list(labels), var_name="stay_measure", value_name="stays")
+    long["stay_measure"] = long["stay_measure"].map(labels)
+    out["readmission_counts"] = long
+    paid = ds["kpi_annual"][["year", "payment_per_beneficiary", "payment_per_claim", "payment_per_admission"]]
+    paid = paid.rename(columns={"payment_per_beneficiary": "Paid per beneficiary", "payment_per_claim": "Paid per claim",
+                                "payment_per_admission": "Paid per admission"})
+    out["paid_per_unit"] = paid.melt(id_vars="year", var_name="paid_measure", value_name="paid_value")
     out["source_manifest"] = source_manifest(config)
     defs = metric_dictionary(config)
     out["metric_definitions"] = defs[["id", "version", "name", "owner_role", "description", "numerator", "denominator",
@@ -172,8 +183,8 @@ KPI_FIELDS = {"beneficiaries": "beneficiaries", "claims": "claims", "payment_tot
               "ed_proxy_per_1000_member_years": "ed_proxy_per_1000", "readmission_rate": "readmission_proxy",
               "top_5pct_payment_share": "top5_payment_share"}
 KPI_SHEETS = {"beneficiaries": "KPI Beneficiaries", "claims": "KPI Claims", "payment_total": "KPI Paid amount",
-              "payment_per_beneficiary": "KPI Paid per beneficiary", "payment_per_claim": "KPI Paid per claim",
-              "payment_per_admission": "KPI Paid per admission",
+              "payment_per_beneficiary": "Paid per beneficiary, claim and admission", "payment_per_claim": "Paid per beneficiary, claim and admission",
+              "payment_per_admission": "Paid per beneficiary, claim and admission",
               "admissions_per_1000_member_years": "KPI Admissions per 1,000 member-years",
               "ed_proxy_per_1000_member_years": "KPI ED proxy per 1,000 member-years",
               "readmission_rate": "KPI Readmission proxy rate", "top_5pct_payment_share": "KPI Top 5% payment share"}
@@ -236,6 +247,8 @@ def build_workbook(frames: dict[str, pd.DataFrame], refresh: str) -> Workbook:
     readm = _datasource("readmission_review", "Readmission proxy", frames["readmission_review"], calcs=[
         Column("readmission_proxy", "real", caption="Readmission proxy rate", fmt=PCT,
                formula="SUM([readmitted_stays]) / SUM([eligible_index_stays])")])
+    ppu = _datasource("paid_per_unit", "Paid per unit", frames["paid_per_unit"])
+    rcount = _datasource("readmission_counts", "Readmission counts", frames["readmission_counts"])
     cond = _datasource("condition_top", "Top conditions", frames["condition_top"])
     chronic = _datasource("chronic_prevalence", "Chronic condition flags", frames["chronic_prevalence"])
     recon = _datasource("reconciliation_results", "Reconciliation checks", frames["reconciliation_results"])
@@ -244,7 +257,7 @@ def build_workbook(frames: dict[str, pd.DataFrame], refresh: str) -> Workbook:
     defs = _datasource("metric_definitions", "Metric definitions", frames["metric_definitions"],
                        strings=("id", "name", "owner_role", "description", "numerator", "denominator", "exclusions",
                                 "source_model", "known_limits"))
-    wb.datasources = [kpi, mpay, mutil, setting, demo, tier, curve, prov, readm, cond, chronic, recon, dq, src, defs]
+    wb.datasources = [kpi, mpay, mutil, setting, demo, tier, curve, prov, readm, rcount, ppu, cond, chronic, recon, dq, src, defs]
 
     def tile(field: str, title: str) -> Sheet:
         return Sheet(KPI_SHEETS[field], kpi, "Text", text=[Pill(field, "Sum")], filters=[sel], title=title,
@@ -255,8 +268,9 @@ def build_workbook(frames: dict[str, pd.DataFrame], refresh: str) -> Workbook:
                       ("ed_proxy_per_1000_member_years", "ED proxy per 1,000"),
                       ("readmission_rate", "Readmission proxy"), ("top_5pct_payment_share", "Top 5% payment share")]
     s: list[Sheet] = [tile(f, t) for f, t in overview_tiles]
-    s += [tile("payment_per_beneficiary", "Paid per beneficiary"), tile("payment_per_claim", "Paid per claim"),
-          tile("payment_per_admission", "Paid per admission")]
+    s.append(Sheet("Paid per beneficiary, claim and admission", ppu, "Text", cols=[Pill("paid_measure")],
+                   text=[Pill("paid_value", "Sum")], filters=[sel], label_text="{v}", font_size=16,
+                   title="Paid per beneficiary, per claim and per admission"))
     s.append(Sheet("Monthly paid by setting", mpay, "Bar", cols=[Pill("month_start", "Month-Trunc")],
                    rows=[Pill("payment_amount", "Sum")], color=Pill("setting"),
                    title="Monthly paid amount by care setting, 2008-2010"))
@@ -269,39 +283,37 @@ def build_workbook(frames: dict[str, pd.DataFrame], refresh: str) -> Workbook:
     s.append(Sheet("Paid per claim by setting", setting, "Bar", rows=[Pill("setting")], cols=[Pill("payment_per_claim", "Sum")],
                    color=Pill("setting"), label=[Pill("payment_per_claim", "Sum")], filters=[sel],
                    title="Paid per claim by setting"))
-    s.append(Sheet("Paid per beneficiary by age band", demo, "Bar", rows=[Pill("age_band")], cols=[Pill("paid_per_beneficiary")],
+    s.append(Sheet("Paid per beneficiary by age band", demo, "Bar", rows=[Pill("age_band"), Pill("sex")], cols=[Pill("paid_per_beneficiary")],
                    color=Pill("sex"), label=[Pill("paid_per_beneficiary")],
                    filters=[sel, Filter("race", group=21), Filter("sex", group=22)],
                    title="Paid per beneficiary by age band and sex"))
     s.append(Sheet("Risk tier paid per beneficiary", tier, "Bar", rows=[Pill("utilization_risk_tier")],
                    cols=[Pill("payment_per_beneficiary", "Sum")], label=[Pill("payment_per_beneficiary", "Sum")], filters=[sel],
-                   mark_color="#1f3a5f", title="Paid per beneficiary by utilization risk tier (descriptive, not CMS-HCC)"))
+                   sort=(Pill("utilization_risk_tier"), Pill("payment_per_beneficiary", "Sum"), "DESC"), mark_color="#1f3a5f", title="Paid per beneficiary by utilization risk tier (descriptive, not CMS-HCC)"))
     s.append(Sheet("Payment concentration curve", curve, "Line", cols=[Pill("beneficiary_percentile")],
                    rows=[Pill("cumulative_payment_share", "Sum")], filters=[sel], mark_color="#1f3a5f",
                    title="Cumulative share of paid amount by top percent of beneficiaries"))
     prov_filters = [sel, Filter("provider_type", ["facility_inpatient"], group=31)]
     s.append(Sheet("Provider volume vs paid per claim", prov, "Circle", cols=[Pill("claims", "Sum")],
                    rows=[Pill("payment_per_claim", "Sum")], color=Pill("review_flag"),
-                   detail=[Pill("provider_id")], tooltip=[Pill("reason_codes"), Pill("peer_count", "Sum")],
+                   detail=[Pill("provider_id")], tooltip=[Pill("reason_codes", "Attribute"), Pill("peer_count", "Sum")],
                    filters=prov_filters, title="Facility volume vs paid per claim (select points to filter the queue)"))
-    s.append(Sheet("Review flags by reason", prov, "Bar", rows=[Pill("reason_codes")], cols=[Pill("provider_id", "CountD")],
-                   label=[Pill("provider_id", "CountD")], mark_color="#c0392b",
-                   filters=prov_filters + [Filter("review_flag", ["true"])], title="Flagged facilities by reason code"))
     s.append(Sheet("Provider action queue", prov, "Text", rows=[Pill("provider_id"), Pill("reason_codes")],
                    text=[Pill("claims", "Sum")], tooltip=[Pill("payment_amount", "Sum")],
                    filters=prov_filters + [Filter("review_flag", ["true"])],
                    sort=(Pill("provider_id"), Pill("claims", "Sum"), "DESC"),
-                   title="Review queue: flagged facilities by claims (synthetic IDs, review prompts only)"))
+                   title="Review queue: flagged facilities by claims (synthetic IDs, review prompts only)", fit="fit-width"))
     s.append(Sheet("Readmission proxy by tier", readm, "Bar", rows=[Pill("utilization_risk_tier")], cols=[Pill("readmission_proxy")],
                    label=[Pill("readmission_proxy")], filters=[sel], mark_color="#1f3a5f",
+                   sort=(Pill("utilization_risk_tier"), Pill("readmission_proxy"), "DESC"),
                    title="30-day readmission proxy by risk tier"))
-    s.append(Sheet("Readmission numerator and denominator", readm, "Text", rows=[Pill("utilization_risk_tier")],
-                   text=[Pill("readmitted_stays", "Sum"), Pill("eligible_index_stays", "Sum"),
-                         Pill("excluded_died_in_stay", "Sum"), Pill("excluded_insufficient_followup", "Sum")],
-                   filters=[sel], title="Numerator, denominator and exclusions by risk tier"))
+    s.append(Sheet("Readmission numerator and denominator", rcount, "Text", rows=[Pill("utilization_risk_tier")],
+                   cols=[Pill("stay_measure")], text=[Pill("stays", "Sum")], filters=[sel],
+                   title="Numerator, denominator and exclusions by risk tier"))
     s.append(Sheet("Risk tier admissions per 1,000", tier, "Bar", rows=[Pill("utilization_risk_tier")],
                    cols=[Pill("admissions_per_1000_member_years", "Sum")], label=[Pill("admissions_per_1000_member_years", "Sum")],
-                   filters=[sel], mark_color="#2a9d8f", title="Admissions per 1,000 member-years by risk tier"))
+                   filters=[sel], mark_color="#2a9d8f", sort=(Pill("utilization_risk_tier"), Pill("admissions_per_1000_member_years", "Sum"), "DESC"),
+                   title="Admissions per 1,000 member-years by risk tier"))
     s.append(Sheet("Top conditions by paid amount", cond, "Bar", rows=[Pill("condition_name")], cols=[Pill("payment_amount", "Sum")],
                    label=[Pill("payment_amount", "Sum")], filters=[sel], mark_color="#1f3a5f",
                    sort=(Pill("condition_name"), Pill("payment_amount", "Sum"), "DESC"),
@@ -312,15 +324,15 @@ def build_workbook(frames: dict[str, pd.DataFrame], refresh: str) -> Workbook:
                    title="Chronic condition flags, share of beneficiaries"))
     s.append(Sheet("Reconciliation status", recon, "Bar", rows=[Pill("category")], cols=[Pill("check_name", "CountD")],
                    color=Pill("passed"), label=[Pill("check_name", "CountD")],
-                   title="Reconciliation checks by category (red = not passed; informational checks do not block)"))
+                   title="Reconciliation checks by category and result (False = not passed; informational checks do not block)"))
     s.append(Sheet("Reconciliation detail", recon, "Text", rows=[Pill("category"), Pill("check_name"), Pill("blocking"), Pill("passed")],
-                   text=[Pill("difference", "Sum")], title="Every reconciliation check and its difference"))
+                   text=[Pill("difference", "Sum")], title="Every reconciliation check and its difference", fit="fit-width"))
     s.append(Sheet("Data-quality counts", dq, "Text", rows=[Pill("measure"), Pill("setting")], text=[Pill("value", "Sum")],
-                   title="Invalid, duplicate, out-of-window and negative-payment counts"))
+                   title="Invalid, duplicate, out-of-window and negative-payment counts", fit="fit-width"))
     s.append(Sheet("Source manifest", src, "Text", rows=[Pill("file"), Pill("retrieved_at")], text=[Pill("bytes", "Sum")],
-                   title="Source files (hash-verified on download)"))
+                   title="Source files (hash-verified on download)", fit="fit-width"))
     s.append(Sheet("Metric definitions", defs, "Text", rows=[Pill("name"), Pill("description")], text=[Pill("version", "Sum")],
-                   title="Metric definitions and contract version (config/metric_dictionary.yml)"))
+                   title="Metric definitions and contract version (config/metric_dictionary.yml)", fit="fit-width"))
     wb.sheets = s
 
     notice = f"{BANNER} DE-SynPUF volume tapers from mid-2009, so trends are not interpretable."
@@ -350,18 +362,16 @@ def build_workbook(frames: dict[str, pd.DataFrame], refresh: str) -> Workbook:
             header("Utilization and payment", "Paid per beneficiary includes beneficiaries with no claims."),
             Box("horz", [year_ctrl(), QuickFilter("Paid per beneficiary by age band", "race"),
                          QuickFilter("Paid per beneficiary by age band", "sex"), reset()], [1, 1, 1, 3]),
-            Box("horz", [View(KPI_SHEETS["payment_per_beneficiary"]), View(KPI_SHEETS["payment_per_claim"]),
-                         View(KPI_SHEETS["payment_per_admission"])]),
+            View("Paid per beneficiary, claim and admission"),
             Box("horz", [View("Paid by setting"), View("Paid per claim by setting"), View("Payment concentration curve")]),
             Box("horz", [View("Paid per beneficiary by age band"), View("Risk tier paid per beneficiary")]),
-            foot()], [9, 3, 6, 13, 13, 2])),
+            foot()], [8, 4, 6, 11, 18, 2])),
         Dashboard("Provider Operations", 1366, 768, Box("vert", [
             header("Provider operations", "Review flags: above Q3 + 3.0 x IQR of same-type peers (min 20 peers, 30 claims). "
                    "A flag is a prompt to review, not a finding about fraud or quality. Provider IDs are synthetic."),
-            Box("horz", [year_ctrl(), QuickFilter("Provider volume vs paid per claim", "provider_type", mode="radiolist"),
+            Box("horz", [year_ctrl(), QuickFilter("Provider volume vs paid per claim", "provider_type", mode="dropdown"),
                          Legend("Provider volume vs paid per claim", "review_flag"), reset()], [2, 3, 2, 3]),
-            Box("horz", [View("Provider volume vs paid per claim"),
-                         Box("vert", [View("Review flags by reason"), View("Provider action queue")], [1, 2])], [3, 2]),
+            Box("horz", [View("Provider volume vs paid per claim"), View("Provider action queue")], [3, 2]),
             foot("Volume flags mostly track facility size on this synthetic data.")], [9, 3, 34, 2])),
         Dashboard("Quality & Cohorts", 1366, 768, Box("vert", [
             header("Quality and cohorts", "Measure-inspired proxies. Not HEDIS, not CMS-HCC, not a clinical outcome measure. "
@@ -370,15 +380,15 @@ def build_workbook(frames: dict[str, pd.DataFrame], refresh: str) -> Workbook:
             Box("horz", [View(KPI_SHEETS["readmission_rate"]), View("Readmission numerator and denominator")], [1, 3]),
             Box("horz", [View("Readmission proxy by tier"), View("Risk tier admissions per 1,000")]),
             Box("horz", [View("Top conditions by paid amount"), View("Chronic condition prevalence")], [3, 2]),
-            foot()], [9, 3, 7, 11, 18, 2])),
+            foot()], [8, 3, 7, 12, 20, 2])),
         Dashboard("Data Quality & Definitions", 1366, 768, Box("vert", [
             header("Data quality and definitions", "Blocking reconciliation failures stop the pipeline. "
                    "Informational MEDREIMB tie-outs differ by design and are not used in any metric."),
-            Box("horz", [Box("vert", [View("Reconciliation status"), Legend("Reconciliation status", "passed")], [5, 1]),
-                         View("Data-quality counts")], [1, 1]),
+            Box("horz", [View("Reconciliation status"), Legend("Reconciliation status", "passed"),
+                         View("Data-quality counts")], [9, 2, 10]),
             Box("horz", [View("Reconciliation detail"), Box("vert", [View("Source manifest"), View("Metric definitions")], [1, 2])],
                 [1, 1]),
-            foot()], [9, 10, 26, 2])),
+            foot()], [8, 17, 21, 2])),
     ]
     wb.actions = [FilterAction("Filter queue by selected facilities", "Provider Operations",
                                "Provider volume vs paid per claim", ["Provider action queue"], "provider_id")]

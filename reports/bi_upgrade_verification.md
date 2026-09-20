@@ -23,6 +23,10 @@ Starting commit: `aa919dd797a92182bb587b5d33ddc4667bcdd6ae` (main, 2026-09-19). 
 
 ## Not verified yet
 
-- **Tableau package prepared; workbook and publication not verified.** Visual QA of four dashboards, Tableau screenshots and the Tableau Public URL wait on the manual checkpoint (`docs/tableau_public_release.md`).
+- Phone layout of the Tableau workbook (desktop layout tested).
+
+## Tableau checkpoint (2026-09-19)
+
+Opened in Tableau Public 2026.2.2, all five dashboards inspected in presentation mode, defects fixed in the generator (see `reports/visual_qa.md`), screenshots captured from Tableau, and published: https://public.tableau.com/app/profile/vijay.chamakuri/viz/MedicareClaimsUtilizationPaymentQualityAnalyticsCMSDE-SynPUF/ExecutiveOverview. The live viz renders the same 2009 KPIs as the pipeline.
 - Excel open-in-Excel check at 100% zoom.
 - Hosted CI result for the final commit is recorded in the pull request.
