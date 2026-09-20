@@ -33,3 +33,16 @@ Each acceptance criterion, the evidence that supports it, and the honest gaps. C
 | Published Tableau data are aggregated with no beneficiary-level identifier | Met | Extract guard in `tableau.py` plus `tests/test_tableau_package.py`. |
 | Payment, not cost, in titles and payment metrics | Met | README H1, dashboard title, workbook title; tests fail on "cost" labels. The repository slug is unchanged to keep links working. |
 | Interview prep in the repository | Not in scope | Removed at the owner's request; not a public artifact. |
+
+## Business analysis artifacts (2026-09-19)
+
+| Artifact | Status | Evidence |
+|---|---|---|
+| `docs/user_stories.md` | Added | 14 stories, Gherkin criteria, each naming an existing pytest or dbt check; `tests/test_ba_artifacts.py` |
+| `docs/process_map.md` | Added | As-is and to-be Mermaid maps with a step-to-implementation table; every path checked by `tests/test_ba_artifacts.py` |
+| `docs/uat_plan.md` | Added | 12 scenarios mapped to existing automated evidence |
+| `docs/requirements_traceability.md` | Added | 8 of 8 BRD rows traced; coverage asserted by `tests/test_ba_artifacts.py::test_traceability_covers_every_brd_stakeholder_row` |
+| `docs/gap_analysis.md` | Added | Deltas drawn from committed artifacts; "not measured" where nothing was measured |
+
+These are documentation and tests only: no pipeline logic, metric definition, dbt model, Excel workbook or Tableau package changed.
+

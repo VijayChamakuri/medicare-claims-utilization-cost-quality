@@ -82,6 +82,18 @@ Every KPI has one contract entry in `config/metric_dictionary.yml`: owner role, 
 - **Risk tier:** a transparent points score from prior-year chronic condition flags, admissions and paid amount. It is a descriptive stratification, not CMS-HCC or any official risk adjustment.
 - **Provider review flags:** a provider sitting above the interquartile fence of same-type peers. A prompt to review, never a finding about fraud or quality.
 
+## Business analysis artifacts
+
+| Document | What it holds |
+|---|---|
+| [User stories](docs/user_stories.md) | 14 stories for the documented personas, each with Gherkin acceptance criteria and the test or evidence file that proves it |
+| [Process map](docs/process_map.md) | As-is manual claims process and the to-be automated one, with each step mapped to the file that implements it |
+| [UAT plan](docs/uat_plan.md) | 12 acceptance scenarios with actor, steps, expected result and the automated evidence for each |
+| [Requirements traceability](docs/requirements_traceability.md) | Every business requirement traced to its story, implementing artifact and verification |
+| [Gap analysis](docs/gap_analysis.md) | Measured differences between the manual process and this one, with "not measured" where nothing was measured |
+
+Also: [business requirements](docs/business_requirements.md), [stakeholder question map](docs/stakeholder_question_map.md), [decision log](docs/decision_log.md), [metric governance](docs/metric_governance.md).
+
 ## dbt layer
 
 `dbt/` holds 35 models generated from the validated SQL by `scripts/gen_dbt_models.py`, with grain, key, relationship and accepted-values tests, the blocking reconciliations as singular tests, and exposures for the Tableau workbook, Excel review and executive summary. `make dbt` builds it into its own schema and compares every model with the legacy SQL table row for row, then the headline KPIs ([`reports/dbt_equivalence.csv`](reports/dbt_equivalence.csv)). The legacy SQL runner stays the default build ([decision log](docs/decision_log.md)).
